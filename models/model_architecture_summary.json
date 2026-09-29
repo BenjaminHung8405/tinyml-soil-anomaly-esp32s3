@@ -1,0 +1,63 @@
+{
+    "model_name": "TinyML_Soil_Autoencoder",
+    "input_shape": [
+        32,
+        1
+    ],
+    "output_shape": [
+        32,
+        1
+    ],
+    "latent_dimension": 4,
+    "total_parameters": 1428,
+    "target_mcu": "ESP32-S3",
+    "estimated_weight_size_float32_bytes": 5712,
+    "estimated_weight_size_int8_bytes": 1428,
+    "layers": [
+        {
+            "name": "input_layer",
+            "type": "InputLayer",
+            "output_shape": "None"
+        },
+        {
+            "name": "flatten",
+            "type": "Flatten",
+            "output_shape": "None"
+        },
+        {
+            "name": "enc_dense_1",
+            "type": "Dense",
+            "output_shape": "None"
+        },
+        {
+            "name": "enc_dense_2",
+            "type": "Dense",
+            "output_shape": "None"
+        },
+        {
+            "name": "latent_space",
+            "type": "Dense",
+            "output_shape": "None"
+        },
+        {
+            "name": "dec_dense_1",
+            "type": "Dense",
+            "output_shape": "None"
+        },
+        {
+            "name": "dec_dense_2",
+            "type": "Dense",
+            "output_shape": "None"
+        },
+        {
+            "name": "reconstruction",
+            "type": "Dense",
+            "output_shape": "None"
+        },
+        {
+            "name": "output_layer",
+            "type": "Reshape",
+            "output_shape": "None"
+        }
+    ]
+}
