@@ -1,13 +1,139 @@
-# Môi trường Python
+# ==========================================
+# 1. Python & Môi trường ảo (Virtual Environments)
+# ==========================================
 venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
 
-# Dữ liệu gốc dung lượng lớn
+# Packaging & Build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==========================================
+# 2. Jupyter Notebooks
+# ==========================================
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# ==========================================
+# 3. Dữ liệu gốc & Dữ liệu dung lượng lớn (Datasets)
+# ==========================================
+# Dữ liệu nén & bảng tính gốc
 data/raw/*.xlsx
+data/raw/*.xls
 data/raw/*.zip
+data/raw/*.tar.gz
+data/raw/*.rar
+data/raw/*.7z
 
-# IDE & OS
+# Dữ liệu trung gian / đã tiền xử lý dung lượng lớn
+data/processed/*.parquet
+data/processed/*.feather
+data/processed/*.npy
+data/processed/*.npz
+
+# Giữ lại cấu trúc thư mục nếu có file .gitkeep
+!.gitkeep
+
+# ==========================================
+# 4. Machine Learning & TinyML Model Artifacts
+# ==========================================
+# Trọng số & checkpoint huấn luyện dung lượng lớn
+*.h5
+*.keras
+*.onnx
+*.pkl
+*.joblib
+*.pt
+*.pth
+checkpoints/
+
+# ==========================================
+# 5. Firmware & Nhúng (ESP32-S3 / PlatformIO / ESP-IDF)
+# ==========================================
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# ESP-IDF & CMake build output
+firmware/build/
+sdkconfig.old
+dependencies.lock
+managed_components/
+
+# Binary & Object files
+*.o
+*.obj
+*.bin
+*.elf
+*.hex
+*.map
+*.a
+*.d
+
+# ==========================================
+# 6. Biến môi trường & Bảo mật (Secrets)
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ==========================================
+# 7. Hệ điều hành & Trình soạn thảo (OS & IDEs)
+# ==========================================
+# macOS
 .DS_Store
-.vscode/
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# VS Code (bỏ qua cấu hình cá nhân, cho phép cấu hình dự án chung nếu cần)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains (PyCharm, CLion, etc.)
 .idea/
+
+# R / RStudio (cho twi-moisture-0.1)
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+
+# ==========================================
+# 8. Logs & File tạm thời
+# ==========================================
+*.log
+logs/
+*.tmp
+*.temp
