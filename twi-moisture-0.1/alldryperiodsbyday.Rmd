@@ -1,0 +1,104 @@
+---
+title: "2017-2021 dry period analysis"
+author: "Quentin D. Read"
+date: "3/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+*note: rerun 08 March with new data QC*
+
+This extends the analysis in `2019dryperiod.Rmd`, which was done for a single dry period in Aug-Sep 2019, to all the dry periods.
+
+This document has the following analysis:
+
+- Get VWC averages by single day (no moving window) for each dry period.
+- Correlate these with TWI, using only the highest performing algorithm(s), for each day in the dry period.
+- Plot the results.
+
+Read data.
+
+```{r}
+library(data.table)
+library(purrr)
+library(ggplot2)
+
+# Read in raw data
+moisture_qc <- fread('data/processed_moisture_qc.csv')
+twi <- fread('data/processed_twi.csv')
+logger_lookup <- fread('data/LoggerLocations.csv')
+dry_periods <- fread('data/DryPeriods2017-2021.csv')
+
+# port should be character variable
+moisture_qc[, port := as.character(port)]
+twi[, port := as.character(port)]
+```
+
+Get daily VWC averages for each day of each dry period. To do this we need to join the dry period data frame, extended to have a row for each day, to the VWC data frame, thereby assigning each day to one (or none) of the dry periods.
+
+```{r}
+cols <- c('start','End')
+dry_periods[, (cols) := lapply(.SD, as.Date, format = '%m/%d/%Y'), .SDcols = cols]
+dry_periods[, period_ID := 1:nrow(.SD)]
+
+dry_days <- dry_periods[, .(date = seq(from = start, to = End, by = 1),
+                            day_from_start = c(0, seq(as.numeric(End - start)))), by = .(period_ID, Type)]
+
+moisture_qc <- moisture_qc[dry_days, on = .(date)]
+vwc <- moisture_qc[, .(VWC = mean(VWC_QC)), by = .(period_ID, Type, date, day_from_start, logger, port, depth)]
+```
+
+Plot them to generally see the VWC trend over each period and by soil depth. We don't see as much drying over time as in the longer dry period from the older notebook.
+
+```{r}
+datexdepth <- vwc[, .(VWC = mean(VWC)), by = .(period_ID, Type, day_from_start, depth)]
+
+ggplot(datexdepth, aes(x = day_from_start, color = factor(depth), group = interaction(depth, period_ID), y = VWC)) +
+  facet_wrap(~ Type) +
+  geom_point() + geom_line() + theme_minimal()
+```
+
+I am going to use TWI index calculated from the FD8 flow algorithm at a DEM resolution of 7 m, unfiltered, to do this analysis because if you average prediction performance by month, it has the highest *cross-validated* performance of all indexes regardless of whether or not depth was included as a covariate. Of course you can always change this. I doubt it will have an enormous influence on this result.
+
+Get the index in question and join it with VWC.
+
+```{r}
+idx_use <- 'TWI.FD8.res7.NFNW'
+twi_use <- twi[index_raw %in% idx_use, .(logger, port, TWI)]
+vwc[twi_use, on = .(logger, port), TWI := i.TWI]
+```
+
+Do the correlation for each day. (Not cross-validated, just the observed-predicted correlation).
+
+```{r}
+get_corr <- function(VWC, TWI, depth, use_depth) {
+  if (!use_depth) fit <- lm(VWC ~ TWI) else fit <- lm(VWC ~ TWI + depth)
+  pred <- predict(fit)
+  cor(VWC, pred)
+}
+
+corrs_time <- vwc[, .(r = get_corr(VWC, TWI, depth, use_depth = FALSE), r_depth = get_corr(VWC, TWI, depth, use_depth = TRUE)), by = .(period_ID, Type, date, day_from_start)]
+```
+
+Plot them. This is way less exciting than the other one. I believe this set of dry periods includes the Aug-Sep 2019 one but only the last four or five days of it. It can be seen as the line in the upper left corner that is around 0.8. But overall it looks like the correlations are just extremely different from period to period, so it seems like local fluctuations in moisture that vary in space and time make it harder to say that TWI predicts VWC at any given time at any given place.
+
+```{r}
+ggplot(corrs_time, aes(x = day_from_start, color = Type)) +
+  geom_point(aes(y = r)) +
+  geom_line(aes(y = r, group = period_ID)) +
+  theme_minimal() +
+  scale_color_manual(values = c('blue', 'red')) +
+  ggtitle('ignoring soil depth')
+
+ggplot(corrs_time, aes(x = day_from_start, color = Type)) +
+  geom_point(aes(y = r_depth)) +
+  geom_line(aes(y = r_depth, group = period_ID)) +
+  theme_minimal() +
+  scale_color_manual(values = c('blue', 'red')) +
+  ggtitle('accounting for soil depth')
+```
+
+

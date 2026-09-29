@@ -1,0 +1,176 @@
+---
+title: "2017-2021 seasonal correlations by day"
+author: "Quentin D. Read"
+date: "8/31/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## change log
+
+- 8/30/22: This script was copied and modified from `alldryperiodsbyday.Rmd`.
+- 8/31/22: Change months to Edwin's new specification; add boxplots
+
+This document has the following analysis:
+
+- Get VWC averages by single day (no moving window) for the months identified as recharge (Nov), saturation (Apr), and use (Sep) periods.
+- Correlate these with TWI, using only the highest performing algorithm(s), for each day in the period.
+- Plot the results.
+
+Read data.
+
+```{r}
+library(data.table)
+library(purrr)
+library(ggplot2)
+library(lubridate)
+
+# Read in raw data
+moisture_qc <- fread('C:/Users/qdread/onedrive_usda/ars_projects/libohova/data/processed_moisture_qc.csv')
+twi <- fread('C:/Users/qdread/onedrive_usda/ars_projects/libohova/data/processed_twi.csv')
+logger_lookup <- fread('data/LoggerLocations.csv')
+
+# Specify dry periods
+dry_periods <- data.table(type = rep(c('recharge', 'saturation', 'use'), each = 5),
+                          month = rep(c(11, 4, 9), each = 5),
+                          year = 2017:2021)
+
+# port should be character variable
+moisture_qc[, port := as.character(port)]
+twi[, port := as.character(port)]
+```
+
+Get daily VWC averages for each day of each period. To do this we need to join the period data frame, extended to have a row for each day, to the VWC data frame, thereby assigning each day to one (or none) of the periods.
+
+```{r}
+dry_periods[, start := as.Date(paste(year, month, '01', sep = '-'))]
+dry_periods[, end := as.Date(paste(year, month, days_in_month(start), sep = '-'))]
+dry_periods[, period_ID := 1:.N]
+
+dry_days <- dry_periods[, .(date = seq(from = start, to = end, by = 1),
+                            day_from_start = c(0, seq(as.numeric(end - start)))), by = .(period_ID, type)]
+
+moisture_qc <- moisture_qc[dry_days, on = .(date)]
+vwc <- moisture_qc[, .(VWC = mean(VWC_QC)), by = .(period_ID, type, year, date, day_from_start, logger, port, depth)]
+```
+
+Plot them to generally see the VWC trend over each period and by soil depth. Classify this by type of period.
+
+```{r}
+datexdepth <- vwc[, .(VWC = mean(VWC)), by = .(period_ID, type, year, day_from_start, depth)]
+
+ggplot(datexdepth, aes(x = day_from_start, color = factor(depth), group = interaction(depth, period_ID), y = VWC)) +
+  facet_wrap(~ type) +
+  geom_point() + geom_line() + theme_minimal()
+```
+
+I am going to use TWI index calculated from the FD8 flow algorithm at a DEM resolution of 7 m, unfiltered, to do this analysis because if you average prediction performance by month, it has the highest *cross-validated* performance of all indexes regardless of whether or not depth was included as a covariate. Of course you can always change this. I doubt it will have an enormous influence on this result.
+
+Get the index in question and join it with VWC.
+
+```{r}
+idx_use <- 'TWI.FD8.res7.NFNW'
+twi_use <- twi[index_raw %in% idx_use, .(logger, port, TWI)]
+vwc[twi_use, on = .(logger, port), TWI := i.TWI]
+```
+
+Do the correlation for each day. (Not cross-validated, just the observed-predicted correlation). **Note**: We do not have any VWC date from before 4/14/2017 so the correlation for April 2017 is based on only part of the month.
+
+```{r}
+get_corr <- function(VWC, TWI, depth, use_depth) {
+  if (!use_depth) fit <- lm(VWC ~ TWI) else fit <- lm(VWC ~ TWI + depth)
+  pred <- predict(fit)
+  cor(VWC, pred)
+}
+
+corrs_time <- vwc[date >= "2017-04-14", .(r = get_corr(VWC, TWI, depth, use_depth = FALSE), r_depth = get_corr(VWC, TWI, depth, use_depth = TRUE)), by = .(period_ID, type, year, date, day_from_start)]
+```
+
+Plot them.
+
+```{r}
+type_facet <- facet_wrap(~ type, labeller = labeller(type = c(recharge = 'recharge (November)', saturation = 'saturation (April)', use = 'use (September)')))
+
+ggplot(corrs_time, aes(x = day_from_start, color = factor(year))) +
+  type_facet +
+  geom_point(aes(y = r)) +
+  geom_line(aes(y = r, group = period_ID)) +
+  theme_minimal() +
+  scale_color_brewer(name = 'year', palette = 'Dark2') +
+  ggtitle('ignoring soil depth') +
+  theme(legend.position = 'bottom')
+
+ggplot(corrs_time, aes(x = day_from_start, color = factor(year))) +
+  type_facet +
+  geom_point(aes(y = r_depth)) +
+  geom_line(aes(y = r_depth, group = period_ID)) +
+  theme_minimal() +
+  scale_color_brewer(name = 'year', palette = 'Dark2') +
+  ggtitle('accounting for soil depth') +
+  theme(legend.position = 'bottom')
+```
+
+## Boxplots of VWC for each month
+
+This plot lumps all soil depths together. Again, April 2017 is based on only half the month.
+
+```{r}
+ggplot(vwc, aes(y = VWC, x = year, fill = factor(year))) +
+  type_facet +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(name = 'year', palette = 'Dark2') +
+  scale_y_continuous(labels = scales::percent) +
+  theme(legend.position = 'none')
+```
+
+## Boxplots of correlations for each month
+
+Separate figure made for the correlations that account for soil depth and those that ignore it. As before, April 2017 is based on only half the month.
+
+```{r}
+ggplot(corrs_time, aes(y = r, x = year, fill = factor(year))) +
+  type_facet +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(name = 'year', palette = 'Dark2') +
+  theme(legend.position = 'none') +
+  ggtitle('ignoring soil depth')
+
+ggplot(corrs_time, aes(y = r_depth, x = year, fill = factor(year))) +
+  type_facet +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(name = 'year', palette = 'Dark2') +
+  theme(legend.position = 'none') +
+  ggtitle('accounting for soil depth')
+```
+
+## Boxplot figures formatted for manuscript
+
+```{r}
+left_panel <- ggplot(vwc, aes(y = VWC, x = year, fill = factor(year))) +
+  type_facet +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(name = 'year', palette = 'Dark2') +
+  scale_y_continuous(labels = scales::percent) +
+  theme(legend.position = 'none')
+
+right_panel <- ggplot(corrs_time, aes(y = r_depth, x = year, fill = factor(year))) +
+  type_facet +
+  geom_boxplot() +
+  theme_minimal() +
+  scale_fill_brewer(name = 'year', palette = 'Dark2') +
+  scale_y_continuous(name = 'Performance of models incorporating depth (r)') +
+  theme(legend.position = 'none') 
+
+library(gridExtra)
+png('C:/Users/qdread/onedrive_usda/ars_projects/libohova/figures/formatted_seasonal_figure.png', height = 4, width = 11, res = 400, units = 'in')
+grid.arrange(left_panel, right_panel, nrow = 1)
+dev.off()
+```
+

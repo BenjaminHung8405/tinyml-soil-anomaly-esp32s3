@@ -1,0 +1,9 @@
+BAF refers to "Breach after filter." 
+
+The Logger_Locations_TWI_BAF.xlsx is an updated dataset to replace the old file
+    Logger_Locations_TWI.xlsx
+
+To make the old file the dem rasters we breached before filtering. This is the wrong order of operations. 
+They should have been filtered first and then breached second. Another change is the use of aspect method 
+in the flow width and specific catchment area calculation. The aspect method is the default and replaces
+the MFD Quinn method used before. Resulting values of TWI are lower than previously.

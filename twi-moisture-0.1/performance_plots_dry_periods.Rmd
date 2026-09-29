@@ -1,0 +1,183 @@
+---
+title: "Prediction of VWC during dry periods"
+author: "Quentin D. Read"
+date: "2/28/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, echo = FALSE)
+```
+
+*note: rerun 08 March with no change to code but with new data QC*
+
+Edwin identified some dry periods from 2017-2021 at the site. I got the average VWC% at each location during those periods and got the correlations between VWC and TWI indexes (also including depth as a covariate, and doing cross-validation) for each of the 11 dry periods. See the script `fit_dryperiods.R` in the repository.
+
+Here are some plots of the results. We will label the x-axis by the starting date of the dry period, and plot a different symbol for cool (circles) and warm (triangles) dry periods. 
+
+```{r, echo = TRUE}
+library(ggplot2)
+library(data.table)
+library(purrr)
+
+r_y <- scale_y_continuous(limits = c(0, 0.8))
+r_CV_y <- scale_y_continuous(limits = c(-0.86, 0.81))
+
+rs_dry <- fread('data/rs_dryperiods.csv')
+```
+
+```{r set themes}
+windowsFonts(`fgbook` = windowsFont("Franklin Gothic Book"))
+theme_set(
+  theme_bw(base_family = 'fgbook') + 
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank(),
+          axis.title.x = element_blank(), 
+          legend.position = c(0.7, 0.15),
+          legend.box = 'horizontal')
+)
+```
+
+```{r define plotting function}
+perf_plots_dryperiods <- function(rs_plot, color_factor, color_palette, color_scale_name, facet_var, plot_title) {
+  leg <- guides(fill = guide_legend(nrow = 3, override.aes = list(shape = 21)))
+  fill_sc <- scale_fill_brewer(palette = color_palette, name = color_scale_name)
+  shape_sc <- scale_shape_manual(values = c(21, 24), name = 'type')
+
+  p1 <- ggplot(rs_plot, aes(x = start, y = r, fill = factor({{color_factor}}), shape = Type)) +
+    geom_point() +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    r_y + leg + fill_sc + shape_sc +
+    ggtitle(plot_title, 'metric 1: VWC predicted with TWI, no CV')
+  
+  p2 <- ggplot(rs_plot, aes(x = start, y = r_depth, fill = factor({{color_factor}}), shape = Type)) +
+    geom_point() +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    r_y + leg + fill_sc + shape_sc +
+    ggtitle(plot_title, 'metric 2: VWC predicted with TWI + depth, no CV')
+  
+  p3 <- ggplot(rs_plot, aes(x = start, y = r_CV, fill = factor({{color_factor}}), shape = Type)) +
+    geom_point() +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    r_CV_y + leg + fill_sc + shape_sc +
+    ggtitle(plot_title, 'metric 3: VWC predicted with TWI, spatially blocked CV')
+  
+  p4 <- ggplot(rs_plot, aes(x = start, y = r_depth_CV, fill = factor({{color_factor}}), shape = Type)) +
+    geom_point() +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    r_CV_y + leg + fill_sc + shape_sc +
+    ggtitle(plot_title, 'metric 4: VWC predicted with TWI + depth, spatially blocked CV')
+  
+  walk(list(p1, p2, p3, p4), print)
+}
+
+```
+
+## SWI 
+
+### No filter
+
+For each of the four prediction metrics, within each DEM resolution, suction factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='SWI' & filter=='NFNW'], color_factor = suction_factor, color_palette = 'Reds', color_scale_name = 'suction factor', facet_var = dem_resolution, plot_title = 'SWI, no filter') 
+```
+
+### Gaussian filter
+
+For each of the four prediction metrics, within each sigma, suction factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='SWI' & filter=='gauss'], color_factor = suction_factor, color_palette = 'Reds', color_scale_name = 'suction factor', facet_var = sigma, plot_title = 'SWI, Gaussian filter') 
+```
+
+### SSC filter
+
+For each of the four prediction metrics, within each filter window, suction factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='SWI' & filter=='SSC'], color_factor = suction_factor, color_palette = 'Reds', color_scale_name = 'suction factor', facet_var = filter_window, plot_title = 'SWI, SSC filter') 
+```
+
+## TWI
+
+Here we want to distinguish between the performance of the different flow algorithms. There are 9 flow algorithms. Most of them do not have any additional differentiation in input parameters but the TWI calculations with the MFD and MTFD algorithms were done with 6 different convergence factors each. So we basically have 19 different flow algorithms. To prevent the plots from becoming too busy, in each case, I will plot the 7 flow algorithms without any different parameters on one set of panels, then the MFD by convergence factor, then the MTFD by convergence factor.
+
+### No filter
+
+#### All flow algorithms besides MFD and MTFD
+
+Within TWI index by flow algorithm when no filter is used, DEM resolution varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='NFNW' & !flow_algorithm %in% c('MFD', 'MTFD')], color_factor = flow_algorithm, color_palette = 'Dark2', color_scale_name = 'flow algorithm', facet_var = dem_resolution, plot_title = 'TWI, no filter, 7 of 9 flow algorithms') 
+```
+
+#### MFD
+
+Within the flow algorithm MFD with no filter, first DEM resolution varies, then convergence factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = dem_resolution, plot_title = 'TWI, no filter, MFD algorithm by convergence factor') 
+```
+
+#### MTFD
+
+Within the flow algorithm MTFD with no filter, first DEM resolution varies, then convergence factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MTFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = dem_resolution, plot_title = 'TWI, no filter, MTFD algorithm by convergence factor') 
+```
+
+### Gaussian filter
+
+#### All flow algorithms besides MFD and MTFD
+
+Within TWI index by flow algorithm with Gaussian filter, sigma varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='gauss' & !flow_algorithm %in% c('MFD', 'MTFD')], color_factor = flow_algorithm, color_palette = 'Dark2', color_scale_name = 'flow algorithm', facet_var = sigma, plot_title = 'TWI, Gaussian filter, 7 of 9 flow algorithms') 
+```
+
+#### MFD
+
+Within the flow algorithm MFD with Gaussian filter, first sigma varies, then convergence factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = sigma, plot_title = 'TWI, Gaussian filter, MFD algorithm by convergence factor') 
+```
+
+#### MTFD
+
+Within the flow algorithm MTFD with Gaussian filter, first sigma varies, then convergence factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MTFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = sigma, plot_title = 'TWI, Gaussian filter, MTFD algorithm by convergence factor') 
+```
+
+
+### SSC filter
+
+#### All flow algorithms besides MFD and MTFD
+
+Within TWI index by flow algorithm with SSC filter, filter window varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='SSC' & !flow_algorithm %in% c('MFD', 'MTFD')], color_factor = flow_algorithm, color_palette = 'Dark2', color_scale_name = 'flow algorithm', facet_var = filter_window, plot_title = 'TWI, Gaussian filter, 7 of 9 flow algorithms') 
+```
+
+#### MFD
+
+Within the flow algorithm MFD with SSC filter, first filter window varies, then convergence factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='SSC' & flow_algorithm %in% c('MFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = filter_window, plot_title = 'TWI, Gaussian filter, MFD algorithm by convergence factor') 
+```
+
+#### MTFD
+
+Within the flow algorithm MTFD with SSC filter, first filter window varies, then convergence factor varies.
+
+```{r}
+perf_plots_dryperiods(rs_dry[index=='TWI' & filter=='SSC' & flow_algorithm %in% c('MTFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = filter_window, plot_title = 'TWI, Gaussian filter, MTFD algorithm by convergence factor') 
+```

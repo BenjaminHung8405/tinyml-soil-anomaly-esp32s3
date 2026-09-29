@@ -1,0 +1,232 @@
+---
+title: "VWC prediction performance by month"
+author: "Quentin D. Read"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+## Change log
+
+- **10 Feb**: original version
+- **15 Feb**: generated again with corrected input data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, echo = FALSE)
+```
+
+Here's a notebook with a bunch of plots of the correlation between observed VWC and predicted VWC across all loggers, compared across a lot of different TWI indexes with different properties. This is just to have all the plots in one place and some musings about them.
+
+A quick summary of where the metrics underlying the plots come from:
+
+- I took the VWC values for each of the 45 unique months in the dataset (April 2017 - December 2020)
+- I crossed those 45 VWC values with the sets of TWI values for all 546 indexes (total of 24,570 combinations)
+- For each of those 24,570 sets of x-y pairs, I fit a simple linear regression.
+- I took the correlation between observed VWC and predicted VWC from the linear model.
+
+I repeated the whole process above but adding depth of the moisture probe as a covariate. For now this is ignored.
+
+Later I will potentially try different metrics of model performance that may or may not incorporate cross-validation to try to avoid selecting TWI metrics that fit the VWC data better just by coincidence (i.e. overfit). But that's for a later date.
+
+Note that I suppress the code that is used to make the plots from printing out in the HTML version of this notebook, just to keep it clean. But you can see it by looking at the .Rmd source file.
+
+## Setup
+
+Load data and packages. Set the y axis to be the same for all plots so that they are comparable. The maximum observed-predicted correlation across all months and indexes (after averaging across years) is just under 0.61 so we will set that as the upper limit across all plots.
+
+```{r, echo = TRUE}
+library(ggplot2)
+library(data.table)
+
+month_x <- scale_x_continuous(breaks = 0:12, labels = c('All','J','F','M','A','M','J','J','A','S','O','N','D'))
+r_y <- scale_y_continuous(limits = c(0, 0.61))
+
+rs <- fread('data/all_rs.csv')
+```
+
+```{r}
+windowsFonts(`fgbook` = windowsFont("Franklin Gothic Book"))
+theme_set(
+  theme_bw(base_family = 'fgbook') + 
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank(),
+          axis.title.x = element_blank(), 
+          legend.position = c(0.7, 0.15))
+)
+```
+
+
+Get the properties for each of the 546 indexes. Then average the model performance metrics by month across years (as well as the performance for the yearly average VWC for each year across all months). So now for each of the 546 indexes we have 13 data points: the average prediction performance by month across the 4-year dataset, plus one extra data point for the yearly averages.
+
+```{r, echo = TRUE}
+rs_month <- rs[year > 0, lapply(.SD, mean), by = .(month, index, filter, dem_resolution, suction_factor, filter_window, sigma, flow_algorithm, convergence_factor), .SDcols = c('r', 'r_depth')]
+```
+
+Now we will go through the different indexes and compare model performance.
+
+## SWI 
+
+### No filter
+
+Within SWI index using no filter, suction factor and DEM resolution vary. Here we see that prediction performance is best in the summer (drier months) though this effect is more pronounced at some resolutions. Performance increases slightly with coarsening DEM resolution then levels off. There is somewhat of an interaction between suction factor and resolution: at finest resolution low suction factor has the best performance, but otherwise high suction factor has the best performance.
+
+```{r}
+ggplot(rs_month[index=='SWI' & filter=='NFNW'], aes(x = month, y = r, color = factor(suction_factor), fill = factor(suction_factor))) +
+  geom_line(data = rs_month[index=='SWI' & filter=='NFNW' & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ dem_resolution, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Reds', name = 'suction factor') +
+  scale_fill_brewer(palette = 'Reds', name = 'suction factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('SWI, no filter')
+```
+
+### Gaussian filter
+
+Within SWI index using Gaussian filter, suction factor and sigma vary. Overall it seems like the performance is a little bit less than using no filter with a medium DEM resolution. Again it looks like prediction performance is better in the summer months. Performance is worse at a low suction factor but plateaus at a maximum of 0.5 by the time suction factor is around 4-8. Higher sigma appears to be generally better as well, though it also seems to roughly asymptote. Similar to the previous plot there's the suggestion of an interaction between sigma and suction factor.
+
+```{r}
+ggplot(rs_month[index=='SWI' & filter=='gauss'], aes(x = month, y = r, color = factor(suction_factor), fill = factor(suction_factor))) +
+  geom_line(data = rs_month[index=='SWI' & filter=='gauss' & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ sigma, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Reds', name = 'suction factor') +
+  scale_fill_brewer(palette = 'Reds', name = 'suction factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('SWI, gaussian filter')
+```
+
+### SSC filter
+
+Within SWI index using SSC filter, suction factor and filter window vary. A larger filter window seems to have a weak positive effect on performance. The same month trend is visible but the very small filter windows have a different pattern as well as a potential interaction with suction factor.
+
+```{r}
+ggplot(rs_month[index=='SWI' & filter=='SSC'], aes(x = month, y = r, color = factor(suction_factor), fill = factor(suction_factor))) +
+  geom_line(data = rs_month[index=='SWI' & filter=='SSC' & month > 0]) +
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ filter_window, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Reds', name = 'suction factor') +
+  scale_fill_brewer(palette = 'Reds', name = 'suction factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('SWI, SSC filter')
+```
+
+## TWI
+
+Here we want to distinguish between the performance of the different flow algorithms. There are 9 flow algorithms. Most of them do not have any additional differentiation in input parameters but the TWI calculations with the MFD and MTFD algorithms were done with 6 different convergence factors each. So we basically have 19 different flow algorithms. To prevent the plots from becoming too busy, in each case, I will plot the 7 flow algorithms without any different parameters on one set of panels, then the MFD by convergence factor, then the MTFD by convergence factor.
+
+### No filter
+
+Within TWI index when no filter is used, DEM resolution varies.
+
+The seasonal trends in performance are much more variable than for the SWI indexes plotted above, though the better performance in summer trend seems pretty clear at medium to coarse resolutions of the DEM. MMDBGFD and FD8 look like they are pretty high performing. Overall using a relatively coarse resolution appears to be the best choice for prediction. MFD and MTFD seem to perform well especially at coarser resolutions. Convergence factor makes a difference for performance of MFD but not at all for MTFD. Specifically, at finer resolution low convergence factor performs better, but at coarser resolution there is less difference among convergence factors (there high convergence factors do slightly better).
+
+```{r}
+ggplot(rs_month[index=='TWI' & filter=='NFNW' & !flow_algorithm %in% c('MFD', 'MTFD')], aes(x = month, y = r, color = flow_algorithm, fill = flow_algorithm)) +
+  geom_line(data = rs_month[index=='TWI' & filter=='NFNW' & !flow_algorithm %in% c('MFD', 'MTFD') & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ dem_resolution, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Dark2', name = 'flow algorithm') +
+  scale_fill_brewer(palette = 'Dark2', name = 'flow algorithm') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, no filter', '7 of 9 flow algorithms')
+
+ggplot(rs_month[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MFD')], aes(x = month, y = r, color = factor(convergence_factor), fill = factor(convergence_factor))) +
+  geom_line(data = rs_month[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MFD') & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ dem_resolution, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Blues', name = 'convergence factor') +
+  scale_fill_brewer(palette = 'Blues', name = 'convergence factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, no filter', 'MFD algorithm by convergence factor')
+
+ggplot(rs_month[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MTFD')], aes(x = month, y = r, color = factor(convergence_factor), fill = factor(convergence_factor))) +
+  geom_line(data = rs_month[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MTFD') & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ dem_resolution, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Blues', name = 'convergence factor') +
+  scale_fill_brewer(palette = 'Blues', name = 'convergence factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, no filter', 'MTFD algorithm by convergence factor')
+```
+
+### Gaussian filter
+
+Within TWI index using Gaussian filter, sigma varies. 
+
+We see that the performance is not that sensitive to sigma. There is some differentiation of performance among the different flow algorithms. The better performance in summer trend is more obvious at high values of sigma, just as it is with high DEM resolutions in the plot above. MTD with low convergence factor and MMDGBFD seem to perform better. As above, convergence factor makes a difference for performance of MFD but not at all for MTFD. However the convergence factor trend is more consistent: the lower convergence factor always performs better (whereas with no filter, that wasn't always the case).
+
+```{r}
+ggplot(rs_month[index=='TWI' & filter=='gauss' & !flow_algorithm %in% c('MFD', 'MTFD')], aes(x = month, y = r, color = flow_algorithm, fill = flow_algorithm)) +
+  geom_line(data = rs_month[index=='TWI' & filter=='gauss' & !flow_algorithm %in% c('MFD', 'MTFD') & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ sigma, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Dark2', name = 'flow algorithm') +
+  scale_fill_brewer(palette = 'Dark2', name = 'flow algorithm') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, gaussian filter', '7 of 9 flow algorithms')
+
+ggplot(rs_month[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MFD')], aes(x = month, y = r, color = factor(convergence_factor), fill = factor(convergence_factor))) +
+  geom_line(data = rs_month[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MFD') & month > 0]) + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ sigma, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Blues', name = 'convergence factor') +
+  scale_fill_brewer(palette = 'Blues', name = 'convergence factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, gaussian filter', 'MFD algorithm by convergence factor')
+
+ggplot(rs_month[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MTFD')], aes(x = month, y = r, color = factor(convergence_factor), fill = factor(convergence_factor))) +
+  geom_line(data = rs_month[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MTFD') & month > 0]) +
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ sigma, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Blues', name = 'convergence factor') +
+  scale_fill_brewer(palette = 'Blues', name = 'convergence factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, gaussian filter', 'MTFD algorithm by convergence factor')
+```
+
+### SSC filter
+
+Within TWI index using SSC filter, filter window varies.
+
+To me the overall performances and trends look very similar to TWI indexes using Gaussian filter.
+
+```{r}
+ggplot(rs_month[index=='TWI' & filter=='SSC' & !flow_algorithm %in% c('MFD', 'MTFD')], aes(x = month, y = r, color = flow_algorithm, fill = flow_algorithm)) +
+  geom_line() + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ filter_window, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Dark2', name = 'flow algorithm') +
+  scale_fill_brewer(palette = 'Dark2', name = 'flow algorithm') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, SSC filter', '7 of 9 flow algorithms')
+
+ggplot(rs_month[index=='TWI' & filter=='SSC' & flow_algorithm %in% c('MFD')], aes(x = month, y = r, color = factor(convergence_factor), fill = factor(convergence_factor))) +
+  geom_line() + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ filter_window, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Blues', name = 'convergence factor') +
+  scale_fill_brewer(palette = 'Blues', name = 'convergence factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, SSC filter', 'MFD algorithm by convergence factor')
+
+ggplot(rs_month[index=='TWI' & filter=='SSC' & flow_algorithm %in% c('MTFD')], aes(x = month, y = r, color = factor(convergence_factor), fill = factor(convergence_factor))) +
+  geom_line() + 
+  geom_point(shape = 21, color = 'black') +
+  facet_wrap(~ filter_window, labeller = label_both, scales = 'free_x') +
+  scale_color_brewer(palette = 'Blues', name = 'convergence factor') +
+  scale_fill_brewer(palette = 'Blues', name = 'convergence factor') +
+  month_x + r_y +
+  guides(color = guide_legend(nrow = 3)) +
+  ggtitle('TWI, SSC filter', 'MTFD algorithm by convergence factor')
+```

@@ -1,0 +1,221 @@
+---
+title: "VWC prediction performance by year"
+author: "Quentin D. Read"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+## Change log
+
+- **24 Feb**: original version, "forked" from the by-month version
+- **08 Mar**: no change to code but uses new data QC. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, echo = FALSE)
+```
+
+## Contents
+
+This notebook is a variation of the notebook that compares performance of the TWI indexes in predicting VWC at different months. Now we compare across years instead. The plots are the same but we just use the grand mean VWC for each year as the quantity to be predicted, so there are only 5 data points, one for each year. Note that 2021 had more loggers than the other years, so there may be inconsistency due to that.
+
+### Basic interpretation
+
+Just from quickly looking at these results, I think generally that the data QC has smoothed out the noise among years a little bit. I don't see 2020 being quite as systematically worse as it used to be in terms of correlations. 
+
+## Setup
+
+Load data and packages. Set the y axis to be the same for all plots so that they are comparable. The maximum observed-predicted correlation for a single year is just under 0.77 so we will set that as the upper limit across all plots. For the cross-validated values, we have a lot of negative correlations between observed and predicted so we have to set a different y-scale.
+
+```{r, echo = TRUE}
+library(ggplot2)
+library(data.table)
+library(purrr)
+
+r_y <- scale_y_continuous(limits = c(0, 0.79))
+r_CV_y <- scale_y_continuous(limits = c(-0.88, 0.79))
+
+rs <- fread('data/all_rs.csv')
+```
+
+```{r}
+windowsFonts(`fgbook` = windowsFont("Franklin Gothic Book"))
+theme_set(
+  theme_bw(base_family = 'fgbook') + 
+    theme(panel.grid = element_blank(),
+          strip.background = element_blank(),
+          axis.title.x = element_blank(), 
+          legend.position = c(0.7, 0.15))
+)
+```
+
+
+Get the properties for each of the 546 indexes, for the rows where `month == 0` (this just means where the grand mean VWC for the year across months was used). So now for each of the 546 indexes we have 6 data points: the prediction performance for each of the 5 years, plus one extra data point for the one where the grand mean all-time VWC was used as the quantity to be predicted. This is repeated for each of the four models: 
+
+- `r` for just the simple regression of VWC on TWI and predicting using the model fit to all data,
+- `r_depth` for the regression of VWC on TWI + depth, 
+- `r_CV` for the regression of VWC on TWI with the spatially blocked cross-validation, and
+- `r_depth_CV` for the spatially blocked cross-validation including both TWI + depth as predictors.
+
+```{r, echo = TRUE}
+rs_year <- rs[month == 0]
+```
+
+```{r}
+year_x <- scale_x_continuous(breaks = 2016:2021, labels = c('Overall', 2017:2021))
+rs_year[year == 0, year := 2016]
+```
+
+
+Now we will go through the different indexes and compare model performance. In this case I will not write a bunch of musings about the patterns because there are so many. Instead I will just put them all out there for you to decide what is best.
+
+**Again note that the y-axis is different for the cross-validation plots because there are quite a few negative observed-predicted correlation values.**
+
+```{r define plotting function}
+perf_plots <- function(rs_plot, color_factor, color_palette, color_scale_name, facet_var, plot_title) {
+  leg <- guides(color = guide_legend(nrow = 3))
+  col_sc <- scale_color_brewer(palette = color_palette, name = color_scale_name)
+  fill_sc <- scale_fill_brewer(palette = color_palette, name = color_scale_name)
+  th <- theme(axis.text.x = element_text(size = 6))
+  
+  p1 <- ggplot(rs_plot, aes(x = year, y = r, color = factor({{color_factor}}), fill = factor({{color_factor}}))) +
+    geom_line(data = rs_plot[year > 2016]) + 
+    geom_point(shape = 21, color = 'black') +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    year_x + r_y + leg + col_sc + fill_sc + th +
+    ggtitle(plot_title, 'metric 1: VWC predicted with TWI, no CV')
+  
+  p2 <- ggplot(rs_plot, aes(x = year, y = r_depth, color = factor({{color_factor}}), fill = factor({{color_factor}}))) +
+    geom_line(data = rs_plot[year > 2016]) + 
+    geom_point(shape = 21, color = 'black') +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    year_x + r_y + leg + col_sc + fill_sc + th +
+    ggtitle(plot_title, 'metric 2: VWC predicted with TWI + depth, no CV')
+  
+  p3 <- ggplot(rs_plot, aes(x = year, y = r_CV, color = factor({{color_factor}}), fill = factor({{color_factor}}))) +
+    geom_line(data = rs_plot[year > 2016]) + 
+    geom_point(shape = 21, color = 'black') +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    year_x + r_CV_y + leg + col_sc + fill_sc + th +
+    ggtitle(plot_title, 'metric 3: VWC predicted with TWI, spatially blocked CV')
+  
+  p4 <- ggplot(rs_plot, aes(x = year, y = r_depth_CV, color = factor({{color_factor}}), fill = factor({{color_factor}}))) +
+    geom_line(data = rs_plot[year > 2016]) + 
+    geom_point(shape = 21, color = 'black') +
+    facet_wrap(vars({{facet_var}}), labeller = label_both, scales = 'free_x') +
+    year_x + r_CV_y + leg + col_sc + fill_sc + th +
+    ggtitle(plot_title, 'metric 4: VWC predicted with TWI + depth, spatially blocked CV')
+  
+  walk(list(p1, p2, p3, p4), print)
+}
+
+```
+
+
+## SWI 
+
+### No filter
+
+For each of the four prediction metrics, within each DEM resolution, suction factor varies.
+
+```{r}
+perf_plots(rs_year[index=='SWI' & filter=='NFNW'], color_factor = suction_factor, color_palette = 'Reds', color_scale_name = 'suction factor', facet_var = dem_resolution, plot_title = 'SWI, no filter') 
+```
+
+### Gaussian filter
+
+For each of the four prediction metrics, within each sigma, suction factor varies.
+
+```{r}
+perf_plots(rs_year[index=='SWI' & filter=='gauss'], color_factor = suction_factor, color_palette = 'Reds', color_scale_name = 'suction factor', facet_var = sigma, plot_title = 'SWI, Gaussian filter') 
+```
+
+### SSC filter
+
+For each of the four prediction metrics, within each filter window, suction factor varies.
+
+```{r}
+perf_plots(rs_year[index=='SWI' & filter=='SSC'], color_factor = suction_factor, color_palette = 'Reds', color_scale_name = 'suction factor', facet_var = filter_window, plot_title = 'SWI, SSC filter') 
+```
+
+## TWI
+
+Here we want to distinguish between the performance of the different flow algorithms. There are 9 flow algorithms. Most of them do not have any additional differentiation in input parameters but the TWI calculations with the MFD and MTFD algorithms were done with 6 different convergence factors each. So we basically have 19 different flow algorithms. To prevent the plots from becoming too busy, in each case, I will plot the 7 flow algorithms without any different parameters on one set of panels, then the MFD by convergence factor, then the MTFD by convergence factor.
+
+### No filter
+
+#### All flow algorithms besides MFD and MTFD
+
+Within TWI index by flow algorithm when no filter is used, DEM resolution varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='NFNW' & !flow_algorithm %in% c('MFD', 'MTFD')], color_factor = flow_algorithm, color_palette = 'Dark2', color_scale_name = 'flow algorithm', facet_var = dem_resolution, plot_title = 'TWI, no filter, 7 of 9 flow algorithms') 
+```
+
+#### MFD
+
+Within the flow algorithm MFD with no filter, first DEM resolution varies, then convergence factor varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = dem_resolution, plot_title = 'TWI, no filter, MFD algorithm by convergence factor') 
+```
+
+#### MTFD
+
+Within the flow algorithm MTFD with no filter, first DEM resolution varies, then convergence factor varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='NFNW' & flow_algorithm %in% c('MTFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = dem_resolution, plot_title = 'TWI, no filter, MTFD algorithm by convergence factor') 
+```
+
+### Gaussian filter
+
+#### All flow algorithms besides MFD and MTFD
+
+Within TWI index by flow algorithm with Gaussian filter, sigma varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='gauss' & !flow_algorithm %in% c('MFD', 'MTFD')], color_factor = flow_algorithm, color_palette = 'Dark2', color_scale_name = 'flow algorithm', facet_var = sigma, plot_title = 'TWI, Gaussian filter, 7 of 9 flow algorithms') 
+```
+
+#### MFD
+
+Within the flow algorithm MFD with Gaussian filter, first sigma varies, then convergence factor varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = sigma, plot_title = 'TWI, Gaussian filter, MFD algorithm by convergence factor') 
+```
+
+#### MTFD
+
+Within the flow algorithm MTFD with Gaussian filter, first sigma varies, then convergence factor varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='gauss' & flow_algorithm %in% c('MTFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = sigma, plot_title = 'TWI, Gaussian filter, MTFD algorithm by convergence factor') 
+```
+
+
+### SSC filter
+
+#### All flow algorithms besides MFD and MTFD
+
+Within TWI index by flow algorithm with SSC filter, filter window varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='SSC' & !flow_algorithm %in% c('MFD', 'MTFD')], color_factor = flow_algorithm, color_palette = 'Dark2', color_scale_name = 'flow algorithm', facet_var = filter_window, plot_title = 'TWI, Gaussian filter, 7 of 9 flow algorithms') 
+```
+
+#### MFD
+
+Within the flow algorithm MFD with SSC filter, first filter window varies, then convergence factor varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='SSC' & flow_algorithm %in% c('MFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = filter_window, plot_title = 'TWI, Gaussian filter, MFD algorithm by convergence factor') 
+```
+
+#### MTFD
+
+Within the flow algorithm MTFD with SSC filter, first filter window varies, then convergence factor varies.
+
+```{r}
+perf_plots(rs_year[index=='TWI' & filter=='SSC' & flow_algorithm %in% c('MTFD')], color_factor = convergence_factor, color_palette = 'Blues', color_scale_name = 'convergence factor', facet_var = filter_window, plot_title = 'TWI, Gaussian filter, MTFD algorithm by convergence factor') 
+```

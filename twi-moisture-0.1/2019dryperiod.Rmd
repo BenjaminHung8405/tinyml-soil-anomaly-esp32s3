@@ -1,0 +1,122 @@
+---
+title: "2019 dry period analysis"
+author: "Quentin D. Read"
+date: "3/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+*edit 19 May 2022: save figures formatted for MS*
+
+This document has the following analysis:
+
+- Get VWC averages by single day (no moving window) for the dry period 2019-08-23 through 2019-09-13. 
+- Correlate these with TWI, using only the highest performing algorithm(s), for each day in the dry period.
+- Plot the results.
+
+Read data.
+
+```{r}
+library(data.table)
+library(purrr)
+library(ggplot2)
+
+# Read in raw data
+moisture_qc <- fread('data/processed_moisture_qc.csv')
+twi <- fread('data/processed_twi.csv')
+logger_lookup <- fread('data/LoggerLocations.csv')
+
+# port should be character variable
+moisture_qc[, port := as.character(port)]
+twi[, port := as.character(port)]
+```
+
+Get daily VWC averages for each day of the dry period.
+
+```{r}
+dry_period <- as.Date(c('2019-08-23', '2019-09-13'))
+
+vwc <- moisture_qc[date >= dry_period[1] & date <= dry_period[2], .(VWC = mean(VWC_QC)), by = .(date, logger, port, depth)]
+```
+
+Plot them to generally see the VWC trend over the period. We see a smoothly decreasing trend as the soil dries out.
+
+```{r}
+p1 <- ggplot(vwc, aes(x=date, group = date, y=VWC)) + geom_boxplot() +
+  theme_bw() +
+  theme(panel.grid = element_blank(), axis.title.x = element_blank()) +
+  scale_y_continuous(name = parse(text = 'VWC~(m^3/m^3)'), limits = c(0.1, 0.4)) +
+  scale_x_date(breaks = as.Date(c('2019-08-23', '2019-08-28', '2019-09-03', '2019-09-08', '2019-09-13')), date_labels = '%b %d')
+
+p1
+```
+
+Also take a look at the drying trends separately by the loggers at different soil depths. Instead of boxplots just plot the means. The 15 cm depth loggers steadily dried out over the period, but the change is small for the deeper loggers that more closely reflect the long-term soil moisture conditions at the sites based on topography.
+
+```{r}
+datexdepth <- vwc[, .(VWC = mean(VWC)), by = .(date, depth)]
+
+p2 <- ggplot(datexdepth, aes(x = date, color = factor(depth), y = VWC)) + geom_point() + geom_line() + 
+  theme_bw() +
+  theme(panel.grid = element_blank(), axis.title.x = element_blank(), legend.position = c(.86, .8)) +
+  scale_y_continuous(name = parse(text = 'VWC~(m^3/m^3)'), limits = c(0.18, 0.29)) +
+  scale_x_date(breaks = as.Date(c('2019-08-23', '2019-08-28', '2019-09-03', '2019-09-08', '2019-09-13')), date_labels = '%b %d') +
+  scale_color_brewer(palette = 'Set1', name = 'depth (cm)')
+
+p2
+```
+
+I am going to use TWI index calculated from the FD8 flow algorithm at a DEM resolution of 7 m, unfiltered, to do this analysis because if you average prediction performance by month, it has the highest *cross-validated* performance of all indexes regardless of whether or not depth was included as a covariate. Of course you can always change this. I doubt it will have an enormous influence on this result.
+
+Get the index in question and join it with VWC.
+
+```{r}
+idx_use <- 'TWI.FD8.res7.NFNW'
+twi_use <- twi[index_raw %in% idx_use, .(logger, port, TWI)]
+vwc[twi_use, on = .(logger, port), TWI := i.TWI]
+```
+
+Do the correlation for each day. (Not cross-validated, just the observed-predicted correlation).
+
+```{r}
+get_corr <- function(VWC, TWI, depth, use_depth) {
+  if (!use_depth) fit <- lm(VWC ~ TWI) else fit <- lm(VWC ~ TWI + depth)
+  pred <- predict(fit)
+  cor(VWC, pred)
+}
+
+corrs_time <- vwc[, .(r = get_corr(VWC, TWI, depth, use_depth = FALSE), r_depth = get_corr(VWC, TWI, depth, use_depth = TRUE)), by = .(date)]
+```
+
+Plot them. Red line does not use soil depth as covariate, while blue line does. It's a fascinating pattern as we see that in both cases the correlation increases over time. However omitting soil depth makes the correlation slower to improve, presumably because it takes longer for the deeper soil to dry out and more faithfully reflect the topographic position of the location (this discrepancy is accounted for by including depth in the model, hence why the blue line gets to the maximum correlation of about 0.8 much sooner).
+
+
+```{r}
+cols <- RColorBrewer::brewer.pal(2, 'Set1')
+
+p3 <- ggplot(corrs_time, aes(x = date)) +
+  geom_point(aes(y = r), color = cols[1]) +
+  geom_line(aes(y = r), color = cols[1]) +
+  geom_point(aes(y = r_depth), color = cols[2]) +
+  geom_line(aes(y = r_depth), color = cols[2]) +
+  theme_bw() +
+  theme(panel.grid = element_blank(), axis.title.x = element_blank(), legend.position = c(.9, .8)) +
+  scale_y_continuous(name = 'model performance (r)', limits = c(0.59, 0.8)) +
+  scale_x_date(breaks = as.Date(c('2019-08-23', '2019-08-28', '2019-09-03', '2019-09-08', '2019-09-13')), date_labels = '%b %d')
+
+p3
+```
+
+Save plots (not evaluated).
+
+```{r, eval = FALSE}
+fp <- 'C:/Users/qdread/onedrive_usda/ars_projects/libohova/ms/figures'
+
+ggsave(file.path(fp, 'fig7a.png'), p1, height = 4, width = 5, dpi = 400)
+ggsave(file.path(fp, 'fig7b.png'), p2, height = 4, width = 5, dpi = 400)
+ggsave(file.path(fp, 'fig7c.png'), p3, height = 4, width = 5, dpi = 400)
+```
+
