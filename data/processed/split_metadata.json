@@ -1,0 +1,12 @@
+{
+    "total_samples": 1249,
+    "window_size": 32,
+    "channels": 1,
+    "train_count": 999,
+    "val_count": 124,
+    "test_count": 126,
+    "train_ratio": 0.8,
+    "val_ratio": 0.1,
+    "test_ratio": 0.1,
+    "data_type": "float32"
+}
