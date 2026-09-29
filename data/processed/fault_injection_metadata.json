@@ -1,0 +1,139 @@
+{
+    "total_test_windows": 126,
+    "faulty_windows_count": 18,
+    "fault_ratio": 0.14285714285714285,
+    "fault_type_distribution": {
+        "spike": 5,
+        "noise_missing": 5,
+        "stuck_at": 4,
+        "drift": 4
+    },
+    "details": [
+        {
+            "window_index": 4,
+            "fault_type": "spike",
+            "fault_code": 1,
+            "severity": "mild",
+            "affected_points": 1
+        },
+        {
+            "window_index": 10,
+            "fault_type": "noise_missing",
+            "fault_code": 2,
+            "severity": "mild",
+            "affected_points": 12
+        },
+        {
+            "window_index": 18,
+            "fault_type": "stuck_at",
+            "fault_code": 3,
+            "severity": "mild",
+            "affected_points": 8
+        },
+        {
+            "window_index": 19,
+            "fault_type": "drift",
+            "fault_code": 4,
+            "severity": "mild",
+            "affected_points": 25
+        },
+        {
+            "window_index": 31,
+            "fault_type": "spike",
+            "fault_code": 1,
+            "severity": "moderate",
+            "affected_points": 1
+        },
+        {
+            "window_index": 36,
+            "fault_type": "noise_missing",
+            "fault_code": 2,
+            "severity": "moderate",
+            "affected_points": 13
+        },
+        {
+            "window_index": 44,
+            "fault_type": "stuck_at",
+            "fault_code": 3,
+            "severity": "moderate",
+            "affected_points": 14
+        },
+        {
+            "window_index": 53,
+            "fault_type": "drift",
+            "fault_code": 4,
+            "severity": "moderate",
+            "affected_points": 26
+        },
+        {
+            "window_index": 67,
+            "fault_type": "spike",
+            "fault_code": 1,
+            "severity": "severe",
+            "affected_points": 1
+        },
+        {
+            "window_index": 73,
+            "fault_type": "noise_missing",
+            "fault_code": 2,
+            "severity": "severe",
+            "affected_points": 4
+        },
+        {
+            "window_index": 77,
+            "fault_type": "stuck_at",
+            "fault_code": 3,
+            "severity": "severe",
+            "affected_points": 20
+        },
+        {
+            "window_index": 78,
+            "fault_type": "drift",
+            "fault_code": 4,
+            "severity": "severe",
+            "affected_points": 27
+        },
+        {
+            "window_index": 91,
+            "fault_type": "spike",
+            "fault_code": 1,
+            "severity": "mild",
+            "affected_points": 1
+        },
+        {
+            "window_index": 94,
+            "fault_type": "noise_missing",
+            "fault_code": 2,
+            "severity": "mild",
+            "affected_points": 10
+        },
+        {
+            "window_index": 97,
+            "fault_type": "stuck_at",
+            "fault_code": 3,
+            "severity": "mild",
+            "affected_points": 8
+        },
+        {
+            "window_index": 104,
+            "fault_type": "drift",
+            "fault_code": 4,
+            "severity": "mild",
+            "affected_points": 21
+        },
+        {
+            "window_index": 116,
+            "fault_type": "spike",
+            "fault_code": 1,
+            "severity": "moderate",
+            "affected_points": 1
+        },
+        {
+            "window_index": 117,
+            "fault_type": "noise_missing",
+            "fault_code": 2,
+            "severity": "moderate",
+            "affected_points": 8
+        }
+    ]
+}
