@@ -1,0 +1,36 @@
+{
+    "total_evaluation_points": 4032,
+    "total_anomalies_ground_truth": 201,
+    "baselines": {
+        "Static_Threshold": {
+            "precision": 0.5428571428571428,
+            "recall": 0.2835820895522388,
+            "f1_score": 0.37254901960784315,
+            "mae_before": 0.005083894357085228,
+            "mae_after": 0.004540036898106337,
+            "rmse_before": 0.038941743583396686,
+            "rmse_after": 0.03326891069000321,
+            "error_reduction_pct": 14.567485611538356
+        },
+        "Hampel_Filter": {
+            "precision": 1.0,
+            "recall": 0.0945273631840796,
+            "f1_score": 0.17272727272727273,
+            "mae_before": 0.005083894357085228,
+            "mae_after": 0.00369425886310637,
+            "rmse_before": 0.038941743583396686,
+            "rmse_after": 0.030158405988156826,
+            "error_reduction_pct": 22.555070181769544
+        },
+        "Kalman_Filter": {
+            "precision": 0.9,
+            "recall": 0.04477611940298507,
+            "f1_score": 0.08530805687203792,
+            "mae_before": 0.005083894357085228,
+            "mae_after": 0.009726003743708134,
+            "rmse_before": 0.038941743583396686,
+            "rmse_after": 0.029037335265678022,
+            "error_reduction_pct": 25.433910776253832
+        }
+    }
+}
