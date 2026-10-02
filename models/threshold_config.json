@@ -1,0 +1,24 @@
+{
+    "model_name": "Dense_Autoencoder_Float32",
+    "window_size": 32,
+    "statistical_metrics": {
+        "mu_val": 0.000197468776605092,
+        "sigma_val": 0.0007399995229206979,
+        "min_mse": 1.2331308880675351e-06,
+        "max_mse": 0.0076794736087322235
+    },
+    "detection_threshold": {
+        "k_sigma": 3.0,
+        "tau": 0.0024174673453671858,
+        "theta_base": 0.000197468776605092,
+        "false_alarm_rate_pct": 1.6129032258064515
+    },
+    "confidence_parameters": {
+        "gamma": 1.0,
+        "valid_threshold": 0.85,
+        "suspicious_threshold": 0.5,
+        "fail_safe_cutoff": 0.3,
+        "physical_min_vwc": 0.0,
+        "physical_max_vwc": 0.6
+    }
+}
