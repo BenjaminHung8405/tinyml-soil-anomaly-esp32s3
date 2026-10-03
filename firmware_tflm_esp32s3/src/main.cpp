@@ -1,33 +1,31 @@
 #include <Arduino.h>
 #include "model_runner.h"
 #include "uart_stream_handler.h"
+#include "edge_pipeline.h"
 
 namespace
 {
     WindowPacket current_packet;
-    uint32_t total_packets_received = 0;
+    constexpr float kDetectionTau = 0.005f;
 }
 
 void setup()
 {
     Serial.begin(115200);
-    // Tăng kích thước bộ đệm nhận UART của ESP32 để không bị drop byte khi truyền nhanh
-    Serial.setRxBufferSize(1024);
-
-    delay(1000);
-    Serial.println("\n[ESP32-S3] UART STREAM HANDLER READY (Baud: 115200)");
+    Serial.setRxBufferSize(2048);
+    Serial.setTxBufferSize(2048);
+    delay(1500);
 
     ModelRunner &runner = ModelRunner::getInstance();
     if (!runner.init())
     {
-        Serial.println("[ERROR] Khoi tao ModelRunner that bai!");
-    }
-    else
-    {
-        Serial.println("[+] ModelRunner san sang tiep nhan chuoi du lieu!");
+        Serial.println("{\"error\":\"ModelRunner init failed\"}");
+        return;
     }
 
+    EdgePipeline::getInstance().init(kDetectionTau);
     uart_stream_init();
+    Serial.println("{\"status\":\"READY\"}");
 }
 
 void loop()
@@ -38,11 +36,18 @@ void loop()
 
         if (uart_stream_process_byte(in_byte, &current_packet))
         {
-            total_packets_received++;
+            EdgePipelineResult res = EdgePipeline::getInstance().processWindow(
+                current_packet.window_index, current_packet.samples);
 
-            // Xuất phản hồi ACK chuẩn định dạng JSON nhẹ cho script Host Python
-            Serial.printf("{\"status\":\"ACK\",\"window_idx\":%u,\"total\":%lu}\n",
-                          current_packet.window_index, total_packets_received);
+            Serial.printf("{\"idx\":%u,\"rule_err\":%d,\"anomaly\":%d,\"lockout\":%d,\"mse\":%.6f,\"Ct\":%.4f,\"lat_us\":%u}\n",
+                          res.window_index,
+                          res.rule_violation ? 1 : 0,
+                          res.anomaly_detected ? 1 : 0,
+                          res.pump_lockout ? 1 : 0,
+                          res.reconstruction_mse,
+                          res.confidence_score,
+                          (unsigned int)res.inference_latency_us);
+            Serial.flush();
         }
     }
 }
