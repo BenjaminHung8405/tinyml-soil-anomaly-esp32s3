@@ -1,0 +1,18 @@
+{
+    "num_samples": 300,
+    "window_size": 32,
+    "channels": 1,
+    "source_dataset": "data/processed/train.npy",
+    "distribution_stats": {
+        "min_value": 0.05242045968770981,
+        "max_value": 1.0,
+        "mean_value": 0.46119019389152527,
+        "std_value": 0.1780322641134262
+    },
+    "train_reference_stats": {
+        "min_value": 0.05242045968770981,
+        "max_value": 1.0,
+        "mean_value": 0.46279025077819824,
+        "std_value": 0.17833493649959564
+    }
+}
