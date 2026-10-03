@@ -1,0 +1,11 @@
+{
+    "model_name": "Dense_Autoencoder_INT8",
+    "target_hardware": "ESP32-S3",
+    "float32_size_bytes": 66035,
+    "int8_size_bytes": 9896,
+    "int8_size_kb": 9.6640625,
+    "size_reduction_percentage": 85.01400772317712,
+    "quantization_type": "Full Integer Quantization (PTQ INT8)",
+    "input_type": "int8",
+    "output_type": "int8"
+}
