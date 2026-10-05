@@ -1,0 +1,7 @@
+metric,value,unit,threshold,status
+inference_latency_mean,0.192,ms,< 50.0,PASSED
+inference_latency_max,0.192,ms,< 50.0,PASSED
+sram_arena_allocated,120.00,KB,< 150.0,PASSED
+sram_arena_used,1.94,KB,-,INFO
+min_free_heap,233.81,KB,-,INFO
+flash_firmware_size,491.84,KB,< 500.0,PASSED
