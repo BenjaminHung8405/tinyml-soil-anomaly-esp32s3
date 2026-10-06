@@ -8,10 +8,11 @@
         "max_mse": 0.0076794736087322235
     },
     "detection_threshold": {
-        "k_sigma": 3.0,
-        "tau": 0.0024174673453671858,
-        "theta_base": 0.000197468776605092,
-        "false_alarm_rate_pct": 1.6129032258064515
+        "tau_mse": 0.007,
+        "tau_max_pt": 0.035,
+        "physical_min": 0.0,
+        "physical_max": 1.0,
+        "k_sigma": 3.0
     },
     "confidence_parameters": {
         "gamma": 1.0,

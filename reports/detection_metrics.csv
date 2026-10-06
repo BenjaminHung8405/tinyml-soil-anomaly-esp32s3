@@ -1,0 +1,16 @@
+fault_type,method,precision,recall,f1_score,far_pct,mdr_pct,gain_vs_baseline_pct
+ALL_OVERALL,EdgePipeline (Proposed),0.8889,0.8889,0.8889,1.85,11.11,11.11
+ALL_OVERALL,Hampel Filter,0.44,0.6111,0.5116,12.96,38.89,0.0
+ALL_OVERALL,Moving 3-Sigma,1.0,0.6667,0.8,0.0,33.33,0.0
+Spike,EdgePipeline (Proposed),0.7143,1.0,0.8333,1.85,0.0,-16.67
+Spike,Hampel Filter,0.2632,1.0,0.4167,12.96,0.0,0.0
+Spike,Moving 3-Sigma,1.0,1.0,1.0,0.0,0.0,0.0
+Noise_Missing,EdgePipeline (Proposed),0.7143,1.0,0.8333,1.85,0.0,-16.67
+Noise_Missing,Hampel Filter,0.2632,1.0,0.4167,12.96,0.0,0.0
+Noise_Missing,Moving 3-Sigma,1.0,1.0,1.0,0.0,0.0,0.0
+Stuck_at,EdgePipeline (Proposed),0.5,0.5,0.5,1.85,50.0,-25.0
+Stuck_at,Hampel Filter,0.0667,0.25,0.1053,12.96,75.0,0.0
+Stuck_at,Moving 3-Sigma,1.0,0.5,0.6667,0.0,50.0,0.0
+Drift,EdgePipeline (Proposed),0.6667,1.0,0.8,1.85,0.0,100.0
+Drift,Hampel Filter,0.0,0.0,0.0,12.96,100.0,0.0
+Drift,Moving 3-Sigma,0.0,0.0,0.0,0.0,100.0,0.0
