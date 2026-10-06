@@ -1,0 +1,16 @@
+fault_type,method,mae,rmse,mae_reduction_pct,rmse_reduction_pct
+ALL_OVERALL,Corrupted_Raw,0.03559,0.10303,0.0,0.0
+ALL_OVERALL,Linear_Interpolation,0.02838,0.08927,20.25,13.359999656677246
+ALL_OVERALL,EdgePipeline_Impute (Proposed),0.00666,0.01692,81.27999877929688,83.58000183105469
+Spike,Corrupted_Raw,0.00952,0.05386,0.0,0.0
+Spike,Linear_Interpolation,9e-05,0.00049,99.08999633789062,99.08999633789062
+Spike,EdgePipeline_Impute (Proposed),0.00036,0.00203,96.23999786376953,96.23999786376953
+Noise_Missing,Corrupted_Raw,0.03846,0.09781,0.0,0.0
+Noise_Missing,Linear_Interpolation,0.02194,0.05566,42.939998626708984,43.09000015258789
+Noise_Missing,EdgePipeline_Impute (Proposed),0.01239,0.02506,67.77999877929688,74.37999725341797
+Stuck_at,Corrupted_Raw,0.00078,0.00132,0.0,0.0
+Stuck_at,Linear_Interpolation,0.00078,0.00132,0.0,0.0
+Stuck_at,EdgePipeline_Impute (Proposed),0.00078,0.00132,0.0,0.0
+Drift,Corrupted_Raw,0.09939,0.12822,0.0,0.0
+Drift,Linear_Interpolation,0.09939,0.12822,0.0,0.0
+Drift,EdgePipeline_Impute (Proposed),0.01327,0.01496,86.6500015258789,88.33999633789062
