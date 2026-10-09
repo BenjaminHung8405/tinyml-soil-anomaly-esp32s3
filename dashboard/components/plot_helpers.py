@@ -440,9 +440,9 @@ def plot_multichannel_spatial_grid(
     x_axis = np.arange(n_samples)
 
     subplot_titles = [
-        f"Kênh S1 {'⚠️ [DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[0] else '✅ [CHUẨN]'}",
-        f"Kênh S2 {'⚠️ [DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[1] else '✅ [CHUẨN]'}",
-        f"Kênh S3 {'⚠️ [DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[2] else '✅ [CHUẨN]'}",
+        f"Kênh S1 {'[DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[0] else '[CHUẨN - VALID]'}",
+        f"Kênh S2 {'[DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[1] else '[CHUẨN - VALID]'}",
+        f"Kênh S3 {'[DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[2] else '[CHUẨN - VALID]'}",
     ]
 
     fig = make_subplots(

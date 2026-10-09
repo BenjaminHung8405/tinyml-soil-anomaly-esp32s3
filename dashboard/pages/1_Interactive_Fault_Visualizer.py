@@ -29,7 +29,7 @@ from src.pipeline.tflite_engine import TFLiteInferenceEngine
 
 st.set_page_config(
     page_title="Không gian So sánh A/B Tín hiệu | Ag-IoT",
-    page_icon="🔬",
+    page_icon=":material/biotech:",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -51,7 +51,7 @@ def get_pipeline():
 pipeline = get_pipeline()
 
 # Tiêu đề trang
-st.title("🔬 Không gian Làm việc So sánh A/B Tín hiệu Thực nghiệm")
+st.title("Không gian Làm việc So sánh A/B Tín hiệu Thực nghiệm", icon=":material/biotech:")
 st.caption("Khảo sát tương tác độ trễ, sai số phục hồi và trạng thái an toàn trên 126 cửa sổ mẫu (Sliding Window W=32).")
 st.markdown("---")
 
@@ -61,12 +61,12 @@ st.markdown("---")
 col_step1, col_step2, col_step3, col_view, col_channel = st.columns([1, 1, 3.5, 2.2, 1.3])
 
 with col_step1:
-    if st.button("⏮️ Trước", width="stretch", help="Lùi về cửa sổ kiểm thử trước"):
+    if st.button("Trước", icon=":material/arrow_back:", width="stretch", help="Lùi về cửa sổ kiểm thử trước"):
         st.session_state.current_window_idx = max(0, st.session_state.current_window_idx - 1)
         st.rerun()
 
 with col_step2:
-    if st.button("Tiếp ⏭️", width="stretch", help="Tiến tới cửa sổ kiểm thử tiếp theo"):
+    if st.button("Tiếp", icon=":material/arrow_forward:", width="stretch", help="Tiến tới cửa sổ kiểm thử tiếp theo"):
         st.session_state.current_window_idx = min(len(df_meta) - 1, st.session_state.current_window_idx + 1)
         st.rerun()
 
@@ -277,7 +277,7 @@ with col_bar_b:
 # -------------------------------------------------------------
 # 5. TIẾT LỘ TIỆM TIẾN: KỊCH BẢN & GÓI TIN BIÊN EDGE PACKET
 # -------------------------------------------------------------
-with st.expander("📝 Chi tiết Kịch bản Thực nghiệm & Gói tin Biên (Edge Packet)", expanded=False):
+with st.expander("Chi tiết Kịch bản Thực nghiệm & Gói tin Biên (Edge Packet)", icon=":material/data_object:", expanded=False):
     col_t1, col_t2 = st.columns(2)
     with col_t1:
         st.markdown(f"**Thông tin Kịch bản #{current_idx:03d}:**")

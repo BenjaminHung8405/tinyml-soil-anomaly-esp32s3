@@ -12,6 +12,7 @@ streamlit>=1.30.0
 plotly>=5.18.0
 matplotlib>=3.7.0
 seaborn>=0.12.0
+python-lucide>=0.5.9
 
 # Embedded Communication & Hardware Testing
 pyserial>=3.5
