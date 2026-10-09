@@ -116,50 +116,65 @@ st.space("small")
 # -----------------------------------------------------------------------------
 st.subheader("Định hướng các chuyên đề nghiên cứu trong hệ thống", icon=":material/explore:")
 
-col_nav1, col_nav2, col_nav3 = st.columns(3)
+col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(4)
 
 with col_nav1:
     with st.container(border=True):
         st.markdown("#### 1. Kiến trúc hệ thống & BOM")
-        st.caption("Kiến trúc nhúng & Thiết kế phần cứng")
+        st.caption("Kiến trúc nhúng & Phần cứng")
         st.markdown(
-            "Khám phá **Pipeline lai 7 tầng**, mô hình phân rã nhiệm vụ trên FreeRTOS, "
-            "bố trí dưỡng cắm tam giác đều $r=5\\text{ cm}$ và bài toán tối ưu chi phí BOM."
+            "Khám phá **Pipeline 7 tầng**, phân rã FreeRTOS, "
+            "dưỡng cắm tam giác $r=5\\text{ cm}$ và tối ưu chi phí BOM."
         )
         st.page_link(
             "pages/1_System_Architecture.py",
-            label="Khám phá kiến trúc hệ thống",
+            label="Kiến trúc hệ thống",
             icon=":material/architecture:",
             width="stretch"
         )
 
 with col_nav2:
     with st.container(border=True):
-        st.markdown("#### 2. Trực quan hóa A/B & Selective Imputation")
-        st.caption("Môi trường thực nghiệm tương tác")
+        st.markdown("#### 2. Trực quan hóa A/B")
+        st.caption("Thực nghiệm tương tác")
         st.markdown(
-            "Trải nghiệm tiêm lỗi trên **126 cửa sổ mẫu**, theo dõi bóc tách $MSE_k$ từng kênh, "
-            "điểm tin cậy $C_t$ và cơ chế phục hồi không gian **Selective Imputation**."
+            "Tiêm lỗi trên **126 cửa sổ mẫu**, theo dõi bóc tách $MSE_k$, "
+            "điểm $C_t$ và **Selective Imputation**."
         )
         st.page_link(
             "pages/2_Algorithm_Explorer.py",
-            label="Mở bộ kiểm thử A/B tương tác",
+            label="Bộ kiểm thử A/B",
             icon=":material/tune:",
             width="stretch"
         )
 
 with col_nav3:
     with st.container(border=True):
-        st.markdown("#### 3. Bảng đối chuẩn toàn diện")
-        st.caption("Định lượng học thuật & Đóng góp khoa học")
+        st.markdown("#### 3. Bảng đối chuẩn")
+        st.caption("Định lượng học thuật")
         st.markdown(
-            "So sánh định lượng toàn diện giữa phương pháp đề xuất với **Ngưỡng tĩnh**, "
-            "**Bộ lọc Hampel** và **Moving 3-Sigma** về F1, FAR, MDR, Latency và Radar đa chiều."
+            "So sánh định lượng với **Ngưỡng tĩnh**, "
+            "**Hampel** và **Moving 3-Sigma** về F1, FAR, MDR và Radar."
         )
         st.page_link(
             "pages/3_Benchmark_Comparison.py",
-            label="Xem bảng đối chuẩn chi tiết",
+            label="Bảng đối chuẩn",
             icon=":material/analytics:",
+            width="stretch"
+        )
+
+with col_nav4:
+    with st.container(border=True):
+        st.markdown("#### 4. Chẩn đoán kỹ thuật")
+        st.caption("Nghiệm thu Task T1.1.5")
+        st.markdown(
+            "Thực hiện **Stress Test trực tiếp**, đo đạc độ trễ tức thời, "
+            "phân vị P95 và kiểm tra độ ổn định."
+        )
+        st.page_link(
+            "pages/4_System_Diagnostic.py",
+            label="Chẩn đoán kỹ thuật",
+            icon=":material/bolt:",
             width="stretch"
         )
 
