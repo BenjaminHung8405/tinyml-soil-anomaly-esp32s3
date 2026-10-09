@@ -47,9 +47,9 @@ col_a, col_b = st.columns(2)
 
 with col_a:
     with st.container(border=True):
-        st.markdown("#### 🏗️ 1. Kiến trúc Hệ thống & Phần cứng")
-        st.write("Tìm hiểu Pipeline 7 tầng, bố trí cụm 3 cảm biến đối xứng bán kính 5 cm và bài toán tối ưu chi phí BOM.")
-        st.page_link("pages/1_System_Architecture.py", label="Khám phá Kiến trúc →", icon="📐")
+        st.markdown("#### 🔬 1. Không gian So sánh A/B Tín hiệu")
+        st.write("Trực tiếp kiểm thử 18 kịch bản tiêm lỗi, theo dõi bóc tách sai số từng kênh và phục hồi Selective Imputation.")
+        st.page_link("pages/1_Interactive_Fault_Visualizer.py", label="Mở Không gian So sánh A/B →", icon="🧪")
 
     with st.container(border=True):
         st.markdown("#### 📊 3. Bảng Đối chuẩn Khoa học")
@@ -58,9 +58,9 @@ with col_a:
 
 with col_b:
     with st.container(border=True):
-        st.markdown("#### 🔬 2. Trực quan hóa Thuật toán A/B")
-        st.write("Trực tiếp kiểm thử 18 kịch bản tiêm lỗi, theo dõi bóc tách sai số từng kênh và phục hồi Selective Imputation.")
-        st.page_link("pages/2_Algorithm_Explorer.py", label="Trải nghiệm Kịch bản Thực nghiệm →", icon="🧪")
+        st.markdown("#### 🏗️ 2. Kiến trúc Hệ thống & Phần cứng")
+        st.write("Tìm hiểu Pipeline 7 tầng, bố trí cụm 3 cảm biến đối xứng bán kính 5 cm và bài toán tối ưu chi phí BOM.")
+        st.page_link("pages/2_System_Architecture.py", label="Khám phá Kiến trúc →", icon="📐")
 
     with st.container(border=True):
         st.markdown("#### ⚡ 4. Chẩn đoán Kỹ thuật & Tải dữ liệu")
@@ -68,4 +68,4 @@ with col_b:
         st.page_link("pages/4_System_Diagnostic.py", label="Chạy Kiểm định Hệ thống →", icon="🚀")
 
 st.markdown("---")
-st.caption("💡 Khuyến nghị trình chiếu: Sử dụng **Trang 2 (Khám phá Thuật toán)** để demo trực tiếp khả năng phát hiện lỗi trước Hội đồng.")
+st.caption("💡 Khuyến nghị trình chiếu: Sử dụng **Trang 1 (Không gian So sánh A/B)** để demo trực tiếp khả năng phát hiện lỗi trước Hội đồng.")

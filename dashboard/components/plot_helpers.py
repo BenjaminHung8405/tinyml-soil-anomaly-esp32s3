@@ -17,6 +17,7 @@ Thiết kế tuân thủ hệ thống màu Tailwind/Inter:
 from typing import List, Optional, Sequence, Union
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 # Bảng màu chuẩn thiết kế (Academic / Modern Ag-IoT)
 COLOR_GROUND_TRUTH = "#059669"  # Emerald 600 - Tín hiệu chuẩn
@@ -397,6 +398,155 @@ def plot_spatial_consistency(
             gridcolor=COLOR_MUTED_GRID,
             zeroline=False,
         ),
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1.0,
+            bgcolor="rgba(255, 255, 255, 0.85)",
+            bordercolor="#E2E8F0",
+            borderwidth=1,
+        ),
+    )
+
+    return fig
+
+
+def plot_multichannel_spatial_grid(
+    X_clean_win: np.ndarray,
+    X_corrupt_win: np.ndarray,
+    imputed_current: Sequence[float],
+    faulty_mask: Sequence[bool],
+    spatial_eps: float = 0.05,
+    height: int = 480,
+) -> go.Figure:
+    """
+    Vẽ đồng bộ 3 kênh cảm biến (S1, S2, S3) trên 3 hàng subplot chia sẻ trục hoành
+    để trực quan hóa sự phân tách không gian và năng lực phục hồi tức thời.
+    
+    Args:
+        X_clean_win: Ma trận cửa sổ chuẩn kích thước (32, 3)
+        X_corrupt_win: Ma trận cửa sổ thô kích thước (32, 3)
+        imputed_current: Danh sách 3 giá trị sau phục hồi ở mẫu hiện tại
+        faulty_mask: Mask phân loại [kênh_0_lỗi, kênh_1_lỗi, kênh_2_lỗi]
+        spatial_eps: Bán kính dải dung sai không gian (mặc định 0.05)
+        height: Chiều cao pixel của toàn bộ figure
+    """
+    clean_arr = np.asarray(X_clean_win, dtype=np.float64)
+    corrupt_arr = np.asarray(X_corrupt_win, dtype=np.float64)
+    n_samples = clean_arr.shape[0]
+    x_axis = np.arange(n_samples)
+
+    subplot_titles = [
+        f"Kênh S1 {'⚠️ [DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[0] else '✅ [CHUẨN]'}",
+        f"Kênh S2 {'⚠️ [DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[1] else '✅ [CHUẨN]'}",
+        f"Kênh S3 {'⚠️ [DỊ THƯỜNG - ĐÃ BÙ]' if faulty_mask[2] else '✅ [CHUẨN]'}",
+    ]
+
+    fig = make_subplots(
+        rows=3,
+        cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.08,
+        subplot_titles=subplot_titles,
+    )
+
+    for ch in range(3):
+        row_idx = ch + 1
+
+        # 1. Dải dung sai không gian quanh tín hiệu chuẩn
+        band_upper = clean_arr[:, ch] + spatial_eps
+        band_lower = clean_arr[:, ch] - spatial_eps
+        fig.add_trace(
+            go.Scatter(
+                x=np.concatenate([x_axis, x_axis[::-1]]),
+                y=np.concatenate([band_upper, band_lower[::-1]]),
+                fill="toself",
+                fillcolor="rgba(5, 150, 105, 0.08)",
+                line=dict(color="rgba(255,255,255,0)"),
+                hoverinfo="skip",
+                showlegend=(ch == 0),
+                name=f"Vùng dung sai (±{spatial_eps:.2f})",
+            ),
+            row=row_idx,
+            col=1,
+        )
+
+        # 2. Ground truth
+        fig.add_trace(
+            go.Scatter(
+                x=x_axis,
+                y=clean_arr[:, ch],
+                mode="lines",
+                name="Tín hiệu Chuẩn (Ground Truth)",
+                line=dict(color=COLOR_GROUND_TRUTH, width=2),
+                showlegend=(ch == 0),
+                hovertemplate=f"S{ch+1} Chuẩn: <b>%{{y:.4f}}</b> VWC<extra></extra>",
+            ),
+            row=row_idx,
+            col=1,
+        )
+
+        # 3. Corrupted thô
+        fig.add_trace(
+            go.Scatter(
+                x=x_axis,
+                y=corrupt_arr[:, ch],
+                mode="lines+markers",
+                name="Tín hiệu Thô (Corrupted)",
+                line=dict(color=COLOR_CORRUPTED, width=1.5, dash="dot"),
+                marker=dict(size=3.5),
+                showlegend=(ch == 0),
+                hovertemplate=f"S{ch+1} Thô: <b>%{{y:.4f}}</b> VWC<extra></extra>",
+            ),
+            row=row_idx,
+            col=1,
+        )
+
+        # 4. Điểm phục hồi tức thời ở mẫu cuối cùng (nếu kênh lỗi)
+        if faulty_mask[ch]:
+            fig.add_trace(
+                go.Scatter(
+                    x=[n_samples - 1],
+                    y=[imputed_current[ch]],
+                    mode="markers",
+                    name="Điểm Phục Hồi (Selective Imputed)",
+                    marker=dict(
+                        color=COLOR_IMPUTED,
+                        size=9,
+                        symbol="diamond",
+                        line=dict(color="#FFFFFF", width=1.5),
+                    ),
+                    showlegend=(ch == 0 or sum(faulty_mask[:ch]) == 0),
+                    hovertemplate=f"S{ch+1} Phục hồi: <b>%{{y:.4f}}</b> VWC<extra></extra>",
+                ),
+                row=row_idx,
+                col=1,
+            )
+
+        # Căn chỉnh trục Y từng subplot
+        fig.update_yaxes(
+            title_text="VWC",
+            range=[0.0, 1.0],
+            row=row_idx,
+            col=1,
+            gridcolor=COLOR_MUTED_GRID,
+            zeroline=False,
+        )
+
+    fig.update_xaxes(
+        title_text="Chỉ số mẫu thời gian (W=32)",
+        row=3,
+        col=1,
+        gridcolor=COLOR_MUTED_GRID,
+        zeroline=False,
+    )
+
+    _apply_academic_theme(fig, height=height)
+    fig.update_layout(
+        margin=dict(l=45, r=25, t=30, b=35),
         hovermode="x unified",
         legend=dict(
             orientation="h",

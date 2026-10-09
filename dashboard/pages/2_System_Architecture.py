@@ -1,5 +1,5 @@
 """
-Trang 1: dashboard/pages/1_System_Architecture.py
+Trang 2: dashboard/pages/2_System_Architecture.py
 Nhiệm vụ: Trình bày chi tiết POC, Pipeline lai 7 tầng, bố trí hình học cảm biến,
 động học mao dẫn đất và phân tích bài toán kinh tế phần cứng (BOM).
 """
