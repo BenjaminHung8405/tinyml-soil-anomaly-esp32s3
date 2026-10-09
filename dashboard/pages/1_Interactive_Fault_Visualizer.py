@@ -17,6 +17,8 @@ for p in [PROJECT_ROOT, DASHBOARD_DIR]:
         sys.path.insert(0, p)
 
 from components.sidebar import render_sidebar
+from components.state_manager import DashboardStateManager
+from src.pipeline.pipeline_factory import get_cached_edge_pipeline
 from components.data_loader import load_sample_windows_with_metadata
 from components.plot_helpers import (
     plot_triplet_signals,
@@ -24,8 +26,6 @@ from components.plot_helpers import (
     plot_confidence_gauge,
     plot_channel_mse_bar,
 )
-from src.pipeline.edge_pipeline import EdgePipeline
-from src.pipeline.tflite_engine import TFLiteInferenceEngine
 
 st.set_page_config(
     page_title="Không gian So sánh A/B Tín hiệu | Ag-IoT",
@@ -35,20 +35,13 @@ st.set_page_config(
 )
 
 render_sidebar()
-
-# Khởi tạo trạng thái phiên làm việc (Session State) cho chỉ số cửa sổ
-if "current_window_idx" not in st.session_state:
-    st.session_state.current_window_idx = 108  # Mặc định kịch bản tiêm lỗi đầu tiên
+DashboardStateManager.initialize_state()
 
 # Nạp dữ liệu (Cached)
 X_clean, X_corrupt, df_meta = load_sample_windows_with_metadata()
 
-# Khởi tạo Pipeline (Cache Resource tránh reload model trên mỗi rerun)
-@st.cache_resource
-def get_pipeline():
-    return EdgePipeline(tflite_engine=TFLiteInferenceEngine())
-
-pipeline = get_pipeline()
+# Khởi tạo Pipeline qua Singleton Factory Cache Resource
+pipeline = get_cached_edge_pipeline()
 
 # Tiêu đề trang
 st.title("Không gian Làm việc So sánh A/B Tín hiệu Thực nghiệm", icon=":material/biotech:")
@@ -62,12 +55,14 @@ col_step1, col_step2, col_step3, col_view, col_channel = st.columns([1, 1, 3.5, 
 
 with col_step1:
     if st.button("Trước", icon=":material/arrow_back:", width="stretch", help="Lùi về cửa sổ kiểm thử trước"):
-        st.session_state.current_window_idx = max(0, st.session_state.current_window_idx - 1)
+        new_idx = max(0, DashboardStateManager.get_window_idx() - 1)
+        DashboardStateManager.set_window_idx(new_idx)
         st.rerun()
 
 with col_step2:
     if st.button("Tiếp", icon=":material/arrow_forward:", width="stretch", help="Tiến tới cửa sổ kiểm thử tiếp theo"):
-        st.session_state.current_window_idx = min(len(df_meta) - 1, st.session_state.current_window_idx + 1)
+        new_idx = min(len(df_meta) - 1, DashboardStateManager.get_window_idx() + 1)
+        DashboardStateManager.set_window_idx(new_idx)
         st.rerun()
 
 with col_step3:
@@ -82,10 +77,10 @@ with col_step3:
             return f"Cửa sổ #{idx:03d} (Sạch) • {row['description']}"
         return f"Cửa sổ #{idx:03d} • [{row['fault_type'].upper()}] {row['target_channel']} ({row['severity']})"
 
-    current_val = st.session_state.current_window_idx
+    current_val = DashboardStateManager.get_window_idx()
     if current_val not in win_list:
         current_val = win_list[0]
-        st.session_state.current_window_idx = current_val
+        DashboardStateManager.set_window_idx(current_val)
 
     selected_idx = st.selectbox(
         "Chọn trực tiếp cửa sổ kiểm thử:",
@@ -94,8 +89,8 @@ with col_step3:
         format_func=format_win,
         label_visibility="collapsed",
     )
-    if selected_idx != st.session_state.current_window_idx:
-        st.session_state.current_window_idx = selected_idx
+    if selected_idx != DashboardStateManager.get_window_idx():
+        DashboardStateManager.set_window_idx(selected_idx)
         st.rerun()
 
 with col_view:
@@ -104,13 +99,14 @@ with col_view:
         ["1 Kênh Chuyên sâu", "Cụm 3 Kênh Đồng bộ"],
         horizontal=True,
         label_visibility="collapsed",
+        key=DashboardStateManager.KEY_VIEW_MODE
     )
 
 # Tự động gợi ý kênh cảm biến dựa trên metadata của kịch bản hiện tại
-current_idx = st.session_state.current_window_idx
+current_idx = DashboardStateManager.get_window_idx()
 scenario_row = df_meta.loc[df_meta["window_idx"] == current_idx].iloc[0]
 
-default_channel = 0
+default_channel = DashboardStateManager.get_channel()
 ch_desc = str(scenario_row["target_channel"])
 if "S2" in ch_desc:
     default_channel = 1
@@ -124,6 +120,7 @@ with col_channel:
         index=default_channel,
         format_func=lambda x: f"Kênh S{x+1}",
         label_visibility="collapsed",
+        key=DashboardStateManager.KEY_CHANNEL
     )
 
 # Chạy suy luận qua EdgePipeline

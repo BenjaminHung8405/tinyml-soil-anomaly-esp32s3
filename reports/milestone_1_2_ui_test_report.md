@@ -11,15 +11,15 @@
 
 | Hạng mục xử lý trong chu trình | Thời gian thực thi trung bình | SLA Cam kết | Tình trạng |
 | :--- | :---: | :---: | :---: |
-| **Nạp dữ liệu & Metadata (Cache)** | `15.30 ms` | $< 50.0\text{ ms}$ | ĐẠT |
-| **Suy luận Pipeline 7 tầng** | `0.11 ms` | $< 20.0\text{ ms}$ | ĐẠT |
+| **Nạp dữ liệu & Metadata (Cache)** | `29.62 ms` | $< 50.0\text{ ms}$ | ĐẠT |
+| **Suy luận Pipeline 7 tầng** | `0.10 ms` | $< 20.0\text{ ms}$ | ĐẠT |
 | **Tính toán Thẻ KPI Metrics** | `0.02 ms` | $< 5.0\text{ ms}$ | ĐẠT |
-| **Dựng 4 biểu đồ Plotly (Render)** | `48.05 ms` | $< 200.0\text{ ms}$ | ĐẠT |
-| **Tổng phản hồi Trung bình (Roundtrip)** | **`48.18 ms`** | **$< 1000.0\text{ ms}$** | **XUẤT SẮC** |
-| **Độ trễ phân vị 95 (P95 Latency)** | **`65.37 ms`** | $< 1000.0\text{ ms}$ | **XUẤT SẮC** |
-| **Thời gian cực đại (Max Spike)** | **`136.64 ms`** | $< 1000.0\text{ ms}$ | **XUẤT SẮC** |
+| **Dựng 4 biểu đồ Plotly (Render)** | `46.40 ms` | $< 200.0\text{ ms}$ | ĐẠT |
+| **Tổng phản hồi Trung bình (Roundtrip)** | **`46.53 ms`** | **$< 1000.0\text{ ms}$** | **XUẤT SẮC** |
+| **Độ trễ phân vị 95 (P95 Latency)** | **`64.55 ms`** | $< 1000.0\text{ ms}$ | **XUẤT SẮC** |
+| **Thời gian cực đại (Max Spike)** | **`109.08 ms`** | $< 1000.0\text{ ms}$ | **XUẤT SẮC** |
 
-> **Kết luận SLA:** Thời gian phản hồi thực tế của hệ thống khi người dùng chọn kịch bản bất kỳ chỉ dao động từ **`48.2 ms` đến `65.4 ms`**, nhanh hơn **5 đến 8 lần** so với ngưỡng yêu cầu 1.0 giây. Thao tác zoom/pan và chuyển kịch bản đạt độ mượt mà cao.
+> **Kết luận SLA:** Thời gian phản hồi thực tế của hệ thống khi người dùng chọn kịch bản bất kỳ chỉ dao động từ **`46.5 ms` đến `64.5 ms`**, nhanh hơn **5 đến 8 lần** so với ngưỡng yêu cầu 1.0 giây. Thao tác zoom/pan và chuyển kịch bản đạt độ mượt mà cao.
 
 ---
 

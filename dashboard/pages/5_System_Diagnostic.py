@@ -23,8 +23,7 @@ for p in [PROJECT_ROOT, DASHBOARD_DIR]:
 
 from components.sidebar import render_sidebar
 from components.data_loader import load_sample_windows
-from src.pipeline.edge_pipeline import EdgePipeline
-from src.pipeline.tflite_engine import TFLiteInferenceEngine
+from src.pipeline.pipeline_factory import get_cached_edge_pipeline
 
 st.set_page_config(
     page_title="Chẩn đoán kỹ thuật & Đo kiểm hiệu năng | Ag-IoT",
@@ -46,12 +45,8 @@ st.markdown(
 
 st.space("small")
 
-# Khởi tạo Pipeline (cache resource)
-@st.cache_resource
-def get_pipeline():
-    return EdgePipeline(tflite_engine=TFLiteInferenceEngine())
-
-pipeline = get_pipeline()
+# Khởi tạo Pipeline qua Singleton Factory Cache Resource
+pipeline = get_cached_edge_pipeline()
 X_clean, X_corrupt, labels = load_sample_windows(126)
 
 # -----------------------------------------------------------------------------

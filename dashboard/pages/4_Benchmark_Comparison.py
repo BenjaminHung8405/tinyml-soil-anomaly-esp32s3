@@ -24,6 +24,8 @@ for p in [PROJECT_ROOT, DASHBOARD_DIR]:
         sys.path.insert(0, p)
 
 from components.sidebar import render_sidebar
+from components.state_manager import DashboardStateManager
+from src.pipeline.pipeline_factory import get_cached_edge_pipeline
 from components.data_loader import (
     load_benchmark_metrics,
     load_detection_metrics,
@@ -40,8 +42,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Hiển thị sidebar dùng chung
+# Hiển thị sidebar dùng chung & Khởi tạo trạng thái tập trung
 render_sidebar()
+DashboardStateManager.initialize_state()
+_cached_pipeline = get_cached_edge_pipeline()
 
 # Tiêu đề trang chuẩn học thuật (không chứa từ khóa task/sprint)
 st.caption("KẾT QUẢ THỰC NGHIỆM & ĐỐI CHUẨN ĐỊNH LƯỢNG HỌC THUẬT")
@@ -72,16 +76,14 @@ with tab_detection:
             selected_fault = st.selectbox(
                 "Dạng lỗi khảo sát:",
                 options=fault_options,
-                index=0,
-                key="t18_fault_filter"
+                key=DashboardStateManager.KEY_T18_FAULT_FILTER
             )
         with f_col2:
             sev_options = ["Tất cả", "Nhẹ (Mild)", "Vừa (Moderate)", "Nặng (Severe)"]
             selected_sev = st.selectbox(
                 "Mức độ nghiêm trọng:",
                 options=sev_options,
-                index=0,
-                key="t18_sev_filter"
+                key=DashboardStateManager.KEY_T18_SEV_FILTER
             )
         with f_col3:
             st.caption("Ghi chú kịch bản:")
@@ -255,16 +257,14 @@ with tab_imputation:
             selected_imp_fault = st.selectbox(
                 "Dạng lỗi khảo sát:",
                 options=["Tất cả", "Spike", "Noise", "Stuck-at", "Drift"],
-                index=0,
-                key="t19_fault_filter"
+                key=DashboardStateManager.KEY_T19_FAULT_FILTER
             )
         with imp_col2:
             selected_metric_type = st.radio(
                 "Chỉ số trực quan hóa:",
                 options=["MAE (Sai số tuyệt đối)", "RMSE (Căn bậc hai bình phương)", "% Cắt giảm sai số"],
-                index=0,
                 horizontal=True,
-                key="t19_metric_type"
+                key=DashboardStateManager.KEY_T19_METRIC_MODE
             )
         with imp_col3:
             st.caption("Cơ chế phục hồi cốt lõi:")
