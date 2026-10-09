@@ -31,7 +31,7 @@ st.set_page_config(
 render_sidebar()
 
 # Tiêu đề trang
-st.caption("KIẾN TRÚC TỔNG THỂ & THIẾT KẾ PHẦN CỨNG / TASK T1.1.4")
+st.caption("THIẾT KẾ KIẾN TRÚC TỔNG THỂ & GIẢI PHÁP PHẦN CỨNG THỰC NGHIỆM")
 st.title("Kiến trúc hệ thống & bài toán kinh tế phần cứng", icon=":material/account_tree:")
 st.markdown(
     "Thuyết minh giải pháp độ tin cậy bằng phần mềm (**Software-Defined Reliability**) "

@@ -37,7 +37,7 @@ st.set_page_config(
 render_sidebar()
 
 # Tiêu đề trang
-st.caption("KIỂM THỬ TÍCH HỢP NỘI BỘ & ĐO KIỂM STRESS TEST / TASK T1.1.5")
+st.caption("KIỂM THỬ TÍCH HỢP HỆ THỐNG & ĐO KIỂM HIỆU NĂNG THỜI GIAN THỰC")
 st.title("Chẩn đoán kỹ thuật & hiệu năng tích hợp nội bộ", icon=":material/bolt:")
 st.markdown(
     "Môi trường đo kiểm thời gian thực phục vụ nghiệm thu: Tải mượt mà, không giật lag, "
@@ -222,7 +222,7 @@ with st.container(border=True):
       [`reports/internal_integration_test_report.md`](file:///Users/benjaminhung8405/Documents/Study/KLTN/tinyml-soil-anomaly-esp32s3/reports/internal_integration_test_report.md).
     - **Đánh giá mức độ phản hồi:** Quá trình duyệt dữ liệu 126 cửa sổ trên toàn bộ giao diện duy trì khung hình 60 FPS ổn định, phản hồi tương tác dưới 0.1s nhờ cơ chế nạp sẵn dữ liệu đệm tĩnh.
     """)
-    st.badge("Hệ thống đạt chuẩn nghiệm thu Task T1.1.5", icon=":material/verified:", color="green")
+    st.badge("Hệ thống đạt chuẩn nghiệm thu kỹ thuật thời gian thực", icon=":material/verified:", color="green")
 
 # Chân trang
 st.space("small")

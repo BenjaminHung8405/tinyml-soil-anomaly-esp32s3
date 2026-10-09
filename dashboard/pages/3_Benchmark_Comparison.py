@@ -38,7 +38,7 @@ st.set_page_config(
 render_sidebar()
 
 # Tiêu đề trang
-st.caption("ĐỐI CHUẨN ĐỊNH LƯỢNG & ĐÓNG GÓP HỌC THUẬT / TASK T1.1.4")
+st.caption("KẾT QUẢ THỰC NGHIỆM & ĐỐI CHUẨN ĐỊNH LƯỢNG HỌC THUẬT")
 st.title("Bảng đối chuẩn toàn diện các phương pháp", icon=":material/balance:")
 st.markdown(
     "So sánh định lượng độc lập giữa **Hybrid TinyML Pipeline (INT8)** với các phương pháp đường cơ sở "
@@ -57,7 +57,7 @@ df_hardware = load_hardware_benchmarks()
 # BẢNG MA TRẬN ĐỐI CHUẨN TỔNG HỢP
 # -----------------------------------------------------------------------------
 with st.container(border=True):
-    st.subheader("Bảng ma trận đánh giá hiệu năng tổng hợp (Tổng kết Sprint 1.1)", icon=":material/table_chart:")
+    st.subheader("Bảng ma trận đánh giá hiệu năng tổng hợp", icon=":material/table_chart:")
     st.caption("Dữ liệu đối chuẩn độc lập chạy trên tập kiểm thử 126 cửa sổ mẫu phân tách 4 kịch bản lỗi:")
 
     st.dataframe(

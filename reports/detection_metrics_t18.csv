@@ -1,0 +1,49 @@
+method_name,fault_category,severity_level,tp,fp,tn,fn,precision,recall,f1_score,far_pct,mdr_pct
+Proposed: Hybrid TinyML INT8,Spike,Nhẹ (Mild),14,3,105,4,0.8235,0.7778,0.8,2.78,22.22
+Proposed: Hybrid TinyML INT8,Spike,Vừa (Moderate),18,0,108,0,1.0,1.0,1.0,0.0,0.0
+Proposed: Hybrid TinyML INT8,Spike,Nặng (Severe),18,0,108,0,1.0,1.0,1.0,0.0,0.0
+Proposed: Hybrid TinyML INT8,Noise,Nhẹ (Mild),14,3,105,4,0.8235,0.7778,0.8,2.78,22.22
+Proposed: Hybrid TinyML INT8,Noise,Vừa (Moderate),17,1,107,1,0.9444,0.9444,0.9444,0.93,5.56
+Proposed: Hybrid TinyML INT8,Noise,Nặng (Severe),18,0,108,0,1.0,1.0,1.0,0.0,0.0
+Proposed: Hybrid TinyML INT8,Stuck-at,Nhẹ (Mild),13,3,105,5,0.8125,0.7222,0.7647,2.78,27.78
+Proposed: Hybrid TinyML INT8,Stuck-at,Vừa (Moderate),16,2,106,2,0.8889,0.8889,0.8889,1.85,11.11
+Proposed: Hybrid TinyML INT8,Stuck-at,Nặng (Severe),18,0,108,0,1.0,1.0,1.0,0.0,0.0
+Proposed: Hybrid TinyML INT8,Drift,Nhẹ (Mild),13,4,104,5,0.7647,0.7222,0.7429,3.7,27.78
+Proposed: Hybrid TinyML INT8,Drift,Vừa (Moderate),16,1,107,2,0.9412,0.8889,0.9143,0.93,11.11
+Proposed: Hybrid TinyML INT8,Drift,Nặng (Severe),17,0,108,1,1.0,0.9444,0.9714,0.0,5.56
+Baseline 3: Moving 3-Sigma,Spike,Nhẹ (Mild),13,4,104,5,0.7647,0.7222,0.7429,3.7,27.78
+Baseline 3: Moving 3-Sigma,Spike,Vừa (Moderate),15,2,106,3,0.8824,0.8333,0.8571,1.85,16.67
+Baseline 3: Moving 3-Sigma,Spike,Nặng (Severe),17,0,108,1,1.0,0.9444,0.9714,0.0,5.56
+Baseline 3: Moving 3-Sigma,Noise,Nhẹ (Mild),13,6,102,5,0.6842,0.7222,0.7027,5.56,27.78
+Baseline 3: Moving 3-Sigma,Noise,Vừa (Moderate),14,3,105,4,0.8235,0.7778,0.8,2.78,22.22
+Baseline 3: Moving 3-Sigma,Noise,Nặng (Severe),15,1,107,3,0.9375,0.8333,0.8824,0.93,16.67
+Baseline 3: Moving 3-Sigma,Stuck-at,Nhẹ (Mild),8,6,102,10,0.5714,0.4444,0.5,5.56,55.56
+Baseline 3: Moving 3-Sigma,Stuck-at,Vừa (Moderate),10,6,102,8,0.625,0.5556,0.5882,5.56,44.44
+Baseline 3: Moving 3-Sigma,Stuck-at,Nặng (Severe),11,4,104,7,0.7333,0.6111,0.6667,3.7,38.89
+Baseline 3: Moving 3-Sigma,Drift,Nhẹ (Mild),4,7,101,14,0.3636,0.2222,0.2759,6.48,77.78
+Baseline 3: Moving 3-Sigma,Drift,Vừa (Moderate),5,8,100,13,0.3846,0.2778,0.3226,7.41,72.22
+Baseline 3: Moving 3-Sigma,Drift,Nặng (Severe),6,7,101,12,0.4615,0.3333,0.3871,6.48,66.67
+Baseline 2: Bộ lọc Hampel,Spike,Nhẹ (Mild),13,3,105,5,0.8125,0.7222,0.7647,2.78,27.78
+Baseline 2: Bộ lọc Hampel,Spike,Vừa (Moderate),16,1,107,2,0.9412,0.8889,0.9143,0.93,11.11
+Baseline 2: Bộ lọc Hampel,Spike,Nặng (Severe),18,0,108,0,1.0,1.0,1.0,0.0,0.0
+Baseline 2: Bộ lọc Hampel,Noise,Nhẹ (Mild),11,6,102,7,0.6471,0.6111,0.6286,5.56,38.89
+Baseline 2: Bộ lọc Hampel,Noise,Vừa (Moderate),12,4,104,6,0.75,0.6667,0.7059,3.7,33.33
+Baseline 2: Bộ lọc Hampel,Noise,Nặng (Severe),14,3,105,4,0.8235,0.7778,0.8,2.78,22.22
+Baseline 2: Bộ lọc Hampel,Stuck-at,Nhẹ (Mild),7,10,98,11,0.4118,0.3889,0.4,9.26,61.11
+Baseline 2: Bộ lọc Hampel,Stuck-at,Vừa (Moderate),8,9,99,10,0.4706,0.4444,0.4571,8.33,55.56
+Baseline 2: Bộ lọc Hampel,Stuck-at,Nặng (Severe),10,7,101,8,0.5882,0.5556,0.5714,6.48,44.44
+Baseline 2: Bộ lọc Hampel,Drift,Nhẹ (Mild),4,10,98,14,0.2857,0.2222,0.25,9.26,77.78
+Baseline 2: Bộ lọc Hampel,Drift,Vừa (Moderate),4,7,101,14,0.3636,0.2222,0.2759,6.48,77.78
+Baseline 2: Bộ lọc Hampel,Drift,Nặng (Severe),6,9,99,12,0.4,0.3333,0.3636,8.33,66.67
+Baseline 1: Ngưỡng tĩnh,Spike,Nhẹ (Mild),10,6,102,8,0.625,0.5556,0.5882,5.56,44.44
+Baseline 1: Ngưỡng tĩnh,Spike,Vừa (Moderate),11,5,103,7,0.6875,0.6111,0.6471,4.63,38.89
+Baseline 1: Ngưỡng tĩnh,Spike,Nặng (Severe),12,2,106,6,0.8571,0.6667,0.75,1.85,33.33
+Baseline 1: Ngưỡng tĩnh,Noise,Nhẹ (Mild),5,12,96,13,0.2941,0.2778,0.2857,11.11,72.22
+Baseline 1: Ngưỡng tĩnh,Noise,Vừa (Moderate),7,13,95,11,0.35,0.3889,0.3684,12.04,61.11
+Baseline 1: Ngưỡng tĩnh,Noise,Nặng (Severe),8,11,97,10,0.4211,0.4444,0.4324,10.19,55.56
+Baseline 1: Ngưỡng tĩnh,Stuck-at,Nhẹ (Mild),3,10,98,15,0.2308,0.1667,0.1935,9.26,83.33
+Baseline 1: Ngưỡng tĩnh,Stuck-at,Vừa (Moderate),4,9,99,14,0.3077,0.2222,0.2581,8.33,77.78
+Baseline 1: Ngưỡng tĩnh,Stuck-at,Nặng (Severe),4,8,100,14,0.3333,0.2222,0.2667,7.41,77.78
+Baseline 1: Ngưỡng tĩnh,Drift,Nhẹ (Mild),2,13,95,16,0.1333,0.1111,0.1212,12.04,88.89
+Baseline 1: Ngưỡng tĩnh,Drift,Vừa (Moderate),2,13,95,16,0.1333,0.1111,0.1212,12.04,88.89
+Baseline 1: Ngưỡng tĩnh,Drift,Nặng (Severe),2,10,98,16,0.1667,0.1111,0.1333,9.26,88.89
