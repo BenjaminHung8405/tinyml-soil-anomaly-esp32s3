@@ -1,5 +1,5 @@
 """
-Trang 3: dashboard/pages/3_Benchmark_Comparison.py
+Trang 4: dashboard/pages/4_Benchmark_Comparison.py
 Nhiệm vụ: Trình bày bảng đối chuẩn khoa học so sánh phương pháp đề xuất với
 các phương pháp đường cơ sở (Ngưỡng tĩnh, Hampel, Moving 3-Sigma).
 Bao gồm:

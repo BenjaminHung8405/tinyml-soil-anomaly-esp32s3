@@ -1,0 +1,8 @@
+item_id,component_name,unit_price_vnd,quantity,technical_role,category,total_price_vnd
+BOM_01,"Kit ESP32-S3-WROOM-1-N16R8 (16MB Flash, 8MB PSRAM)",135000,1,"Vi xử lý trung tâm, nạp TFLM INT8 & FreeRTOS",MCU & Compute,135000
+BOM_02,03 Cảm biến độ ẩm đất MKE-S13 (Điện dung chống ăn mòn),25000,3,Thu thập VWC đa điểm (đối xứng r=5cm),Sensors,75000
+BOM_03,Module thẻ MicroSD SPI + Thẻ nhớ 8GB Class 10,45000,1,Lưu trữ dữ liệu telemetry offline & Ring Buffer log,Storage,45000
+BOM_04,Module RTC DS3231 + Pin nuôi CR2032,25000,1,Cung cấp nhãn thời gian thực chuẩn giây,Peripherals,25000
+BOM_05,Module Relay 5V cách ly quang + Bơm chìm mini 5V,30000,1,Cơ cấu chấp hành tưới & Khóa ngắt an toàn Fail-safe,Actuators,30000
+BOM_06,Module nguồn Breadboard MB102 + Adapter 9V 2A,35000,1,Cấp nguồn ổn định 5V/3.3V cách ly nhiễu,Power Supply,35000
+BOM_07,Breadboard 830 lỗ + Dây cắm Jumper + Tụ lọc 100nF,0,1,Mạch cắm nối thử nghiệm & lọc gai nhiễu điện áp ADC,Accessories,0

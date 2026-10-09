@@ -157,6 +157,8 @@ graph TD
 # TAB 3: BÀI TOÁN KINH TẾ (BOM) & ĐỐI CHUẨN PHẦN CỨNG
 # -----------------------------------------------------------------------------
 with tab_bom:
+    from src.pipeline.hardware_economics_loader import HardwareEconomicsLoader
+    
     bom_col1, bom_col2 = st.columns([3, 2])
 
     with bom_col1:
@@ -164,25 +166,27 @@ with tab_bom:
             st.subheader("Danh mục linh kiện thực tế (Bill of Materials - BOM)", icon=":material/receipt_long:")
             st.caption("Bảng kê chi tiết cấu hình phần cứng trạm quan trắc kiểm thử tại phòng thí nghiệm.")
 
-            bom_df = load_hardware_bom()
+            bom_df = HardwareEconomicsLoader.load_bom_data()
             st.dataframe(
                 bom_df,
                 column_config={
-                    "Hạng mục linh kiện": st.column_config.TextColumn("Linh kiện thiết bị", width="large"),
-                    "Đơn giá (VNĐ)": st.column_config.NumberColumn("Đơn giá", format="%,d đ"),
-                    "Số lượng": st.column_config.NumberColumn("Số lượng", format="%d"),
-                    "Thành tiền (VNĐ)": st.column_config.NumberColumn("Thành tiền", format="%,d đ"),
+                    "item_id": st.column_config.TextColumn("Mã BOM", width="small"),
+                    "component_name": st.column_config.TextColumn("Linh kiện thiết bị", width="large"),
+                    "unit_price_vnd": st.column_config.NumberColumn("Đơn giá", format="%,d đ"),
+                    "quantity": st.column_config.NumberColumn("SL", format="%d"),
+                    "total_price_vnd": st.column_config.NumberColumn("Thành tiền", format="%,d đ"),
+                    "technical_role": st.column_config.TextColumn("Vai trò kỹ thuật"),
                 },
                 hide_index=True,
                 width="stretch"
             )
 
-            total_cost = int(bom_df["Thành tiền (VNĐ)"].sum())
+            cost_stats = HardwareEconomicsLoader.calculate_cost_comparison()
             st.metric(
-                label="Tổng chi phí phần cứng trạm POC đề xuất",
-                value=f"{total_cost:,.0f} VNĐ",
-                delta="~ 18 USD (Tối ưu cho ứng dụng nông nghiệp thông minh)",
-                delta_color="off",
+                label="Tổng chi phí phần cứng cụm TinyML Ag-IoT đề xuất",
+                value=f"{cost_stats['proposed_total_vnd']:,} VNĐ",
+                delta=f"Tiết kiệm {cost_stats['savings_pct']}% so với cảm biến công nghiệp",
+                delta_color="normal",
                 border=True
             )
 
@@ -192,19 +196,20 @@ with tab_bom:
             st.markdown("""
             **So sánh giữa 2 trường phái giải pháp:**
 
-            | Tiêu chí | Cảm biến công nghiệp đắt tiền (FDR/TDR) | Giải pháp đề xuất (3× MKE-S13 + TinyML) |
+            | Tiêu chí | Cảm biến công nghiệp (FDR/TDR) | Cụm TinyML Đề xuất (3× MKE-S13) |
             | :--- | :--- | :--- |
-            | **Chi phí thiết bị** | 850.000 – 1.200.000 VNĐ / chiếc | ~ 465.000 VNĐ (trọn bộ 3 cảm biến + MCU) |
-            | **Mức tiết kiệm** | Cơ sở (100%) | **Tiết kiệm > 60%** |
-            | **Điểm hỏng đơn lẻ** | Có (Single Point of Failure) | **Không (Có 2 kênh dự phòng)** |
-            | **Khả năng tự hồi phục** | Không (Hỏng là mất dữ liệu) | **Tự bù kênh hỏng tức thời (Imputation)** |
-            | **Tính an toàn bơm tưới** | Phụ thuộc cảm biến đơn | **Fail-safe tự ngắt khi $C_t < 0.5$** |
+            | **Chi phí thiết bị** | ~980.000 VNĐ / chiếc | **~345.000 VNĐ (trọn bộ)** |
+            | **Mức tiết kiệm** | Cơ sở (100%) | **Tiết kiệm 64.8% ngân sách** |
+            | **Điểm hỏng đơn lẻ** | Có (Single Point of Failure) | **Không (3/3 Active Redundancy)** |
+            | **Khả năng tự phục hồi** | Không (Hỏng là mất dữ liệu) | **Tự bù kênh hỏng (Spatial Imputation)** |
+            | **Tính an toàn tưới** | Phụ thuộc 1 đầu đo | **Fail-safe tự ngắt khi $C_t < 0.5$** |
             """)
 
-            st.badge("Phù hợp triển khai diện rộng", icon=":material/check_circle:", color="green")
+            st.badge("Đã kiểm chứng thực nghiệm & Tối ưu BOM", icon=":material/check_circle:", color="green")
+            st.page_link("pages/3_Hardware_Economics.py", label="Xem chi tiết Luận chứng Kinh tế & TCO 24 tháng →", icon=":material/payments:")
 
 # Chân trang
 st.space("small")
 with st.container(horizontal=True, horizontal_alignment="distribute"):
     st.caption("Khóa luận tốt nghiệp: TinyML Soil Anomaly Pipeline trên ESP32-S3")
-    st.caption("Module: 1_System_Architecture.py • Sơ đồ khối & Kinh tế phần cứng")
+    st.caption("Module: 2_System_Architecture.py • Sơ đồ khối & Kiến trúc phần cứng")

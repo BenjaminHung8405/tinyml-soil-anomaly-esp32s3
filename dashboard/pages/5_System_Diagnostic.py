@@ -1,5 +1,5 @@
 """
-Trang phụ trợ: dashboard/pages/4_System_Diagnostic.py
+Trang phụ trợ: dashboard/pages/5_System_Diagnostic.py
 Nhiệm vụ: Trực quan hóa kết quả kiểm thử nội bộ Task T1.1.5,
 cho phép Hội đồng / GVHD đo kiểm độ trễ tức thời, chạy Stress Test trực tiếp trên 126 cửa sổ.
 """
