@@ -1,0 +1,35 @@
+[theme]
+base = "light"
+primaryColor = "#0F172A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8FAFC"
+codeBackgroundColor = "#F1F5F9"
+textColor = "#0F172A"
+linkColor = "#2563EB"
+borderColor = "#E2E8F0"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "6px"
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+baseFontSize = 14
+baseFontWeight = 400
+headingFontSizes = ["30px", "24px", "20px", "16px", "14px", "12px"]
+headingFontWeights = [700, 600, 600, 600, 500, 500]
+linkUnderline = false
+chartCategoricalColors = ["#2563EB", "#059669", "#D97706", "#DC2626", "#7C3AED", "#64748B"]
+
+[theme.sidebar]
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#F1F5F9"
+codeBackgroundColor = "#E2E8F0"
+textColor = "#0F172A"
+borderColor = "#E2E8F0"
+primaryColor = "#0F172A"
+
+[client]
+showErrorDetails = true
+
+[browser]
+gatherUsageStats = false
