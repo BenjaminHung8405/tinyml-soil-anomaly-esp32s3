@@ -21,6 +21,12 @@ for p in [PROJECT_ROOT, DASHBOARD_DIR]:
 
 from components.sidebar import render_sidebar
 from components.data_loader import load_sample_windows
+from components.plot_helpers import (
+    plot_triplet_signals,
+    plot_confidence_gauge,
+    plot_channel_mse_bar,
+    plot_spatial_consistency,
+)
 from src.pipeline.edge_pipeline import EdgePipeline
 from src.pipeline.tflite_engine import TFLiteInferenceEngine
 
@@ -35,11 +41,11 @@ st.set_page_config(
 render_sidebar()
 
 # Tiêu đề trang
-st.caption("TRỰC QUAN HÓA THUẬT TOÁN & ĐÁNH GIÁ A/B / TASK T1.1.4")
+st.caption("TRỰC QUAN HÓA THUẬT TOÁN & ĐÁNH GIÁ A/B / TASK T1.2.1")
 st.title("Khám phá thuật toán & phục hồi chuỗi thích ứng", icon=":material/tune:")
 st.markdown(
     "Môi trường kiểm thử tương tác trên **126 cửa sổ mẫu**, cho phép tiêm lỗi, "
-    "quan sát bộ lọc Heuristic, mạng Autoencoder INT8 bóc tách sai số từng kênh và cơ chế tự bù dữ liệu."
+    "quan sát mạng Autoencoder INT8 bóc tách sai số từng kênh, đánh giá điểm tin cậy $C_t$ và cơ chế tự bù dữ liệu."
 )
 
 st.space("small")
@@ -142,7 +148,7 @@ with col_kpi3:
     st.metric(
         label="Khóa an toàn Relay (Fail-safe)",
         value="CHO PHÉP TƯỚI" if res.is_safe_for_actuation else "KHÓA KHẨN CẤP",
-        delta="Bơm đóng" if res.is_safe_for_actuation else "Ngắt bơm (Ct < 0.5)",
+        delta="Bơm sẵn sàng" if res.is_safe_for_actuation else "Ngắt bơm (Ct < 0.5)",
         delta_color="normal" if res.is_safe_for_actuation else "inverse",
         border=True
     )
@@ -159,7 +165,38 @@ with col_kpi4:
 st.space("small")
 
 # -----------------------------------------------------------------------------
-# BIỂU ĐỒ SO SÁNH DẠNG SÓNG PLOTLY (A/B TESTING)
+# HÀNG ĐỒ THỊ CHUYÊN SÂU: GAUGE CHART & CHANNEL MSE BAR
+# -----------------------------------------------------------------------------
+col_gauge, col_bar = st.columns([1, 1.4])
+
+with col_gauge:
+    with st.container(border=True):
+        st.caption("ĐỒNG HỒ ĐIỂM TIN CẬY HỆ THỐNG")
+        st.plotly_chart(
+            plot_confidence_gauge(
+                ct_score=res.confidence_score_ct,
+                status_label=res.status_label,
+                height=260
+            ),
+            width="stretch"
+        )
+
+with col_bar:
+    with st.container(border=True):
+        st.caption("BÓC TÁCH SAI SỐ TÁI TẠO TỪNG KÊNH SO VỚI NGƯỠNG")
+        st.plotly_chart(
+            plot_channel_mse_bar(
+                mse_channels=res.mse_channels,
+                threshold_tau=0.0075,
+                height=260
+            ),
+            width="stretch"
+        )
+
+st.space("small")
+
+# -----------------------------------------------------------------------------
+# BIỂU ĐỒ SO SÁNH DẠNG SÓNG PLOTLY (3 ĐƯỜNG TÍN HIỆU TRIPLET)
 # -----------------------------------------------------------------------------
 with st.container(border=True):
     st.subheader(
@@ -179,88 +216,55 @@ with st.container(border=True):
     if res.faulty_mask[target_ch]:
         imputed_trace[-1] = res.imputed_current[target_ch]
 
-    fig = go.Figure()
-
-    # Đường 1: Ground Truth
-    fig.add_trace(go.Scatter(
-        y=clean_trace,
-        mode="lines",
-        name=f"S{target_ch+1} Ground Truth (Sạch)",
-        line=dict(color="#059669", width=2.5)
-    ))
-
-    # Đường 2: Dữ liệu tiêm lỗi
-    fig.add_trace(go.Scatter(
-        y=corrupt_trace,
-        mode="lines+markers",
-        name=f"S{target_ch+1} Tín hiệu thô (Corrupted)",
-        line=dict(color="#DC2626", width=1.8, dash="dot"),
-        marker=dict(size=4)
-    ))
-
-    # Đường 3: Phục hồi Selective Imputed
-    fig.add_trace(go.Scatter(
-        y=imputed_trace,
-        mode="lines+markers",
-        name=f"S{target_ch+1} Phục hồi (Selective Imputed)",
-        line=dict(color="#2563EB", width=2.2, dash="dash"),
-        marker=dict(symbol="diamond", size=5)
-    ))
-
-    fig.update_layout(
+    fig_triplet = plot_triplet_signals(
+        clean_series=clean_trace,
+        corrupt_series=corrupt_trace,
+        imputed_series=imputed_trace,
+        channel_name=f"S{target_ch+1}",
         height=400,
-        margin=dict(l=20, r=20, t=30, b=20),
-        xaxis_title="Thời gian trượt (32 mẫu trong cửa sổ W=32, mỗi mẫu 5s)",
-        yaxis_title="Độ ẩm thể tích đất VWC (0.0 – 1.0)",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        template="plotly_white"
+        show_uncertainty_band=True
+    )
+    st.plotly_chart(fig_triplet, width="stretch")
+
+    # Đánh giá mức độ cải thiện sai số MAE
+    mae_raw_val = float(np.mean(np.abs(clean_trace - corrupt_trace)))
+    mae_imp_val = float(np.mean(np.abs(clean_trace - imputed_trace)))
+    mae_improve = ((mae_raw_val - mae_imp_val) / mae_raw_val * 100) if mae_raw_val > 1e-6 else 0.0
+
+    st.caption(
+        f"Đánh giá sai số chuỗi đo: MAE trước phục hồi: **{mae_raw_val:.4f}** • "
+        f"Sau phục hồi: **{mae_imp_val:.4f}** • "
+        f"Mức độ triệt tiêu sai số: :{'green' if mae_improve > 0 else 'blue'}-badge[{mae_improve:.1f}%]"
     )
 
-    st.plotly_chart(fig, width="stretch")
+st.space("small")
 
 # -----------------------------------------------------------------------------
-# BÓC TÁCH SAI SỐ MSE KÊNH & PHÂN TÍCH TOÁN HỌC
+# TÍNH NHẤT QUÁN KHÔNG GIAN & NGUYÊN LÝ THUẬT TOÁN
 # -----------------------------------------------------------------------------
-col_mse, col_calc = st.columns([1, 1])
+col_spatial, col_calc = st.columns([1.2, 1])
 
-with col_mse:
+with col_spatial:
     with st.container(border=True):
-        st.subheader("Bóc tách sai số tái tạo từng kênh (Channel MSE Breakdown)", icon=":material/bar_chart:")
-        st.caption("Mạng Autoencoder giải nén và đánh giá độc lập trên từng cảm biến:")
-
-        mse_cols = st.columns(3)
-        for k in range(3):
-            is_fault = res.faulty_mask[k]
-            status_text = "LỖI (Faulty)" if is_fault else "BÌNH THƯỜNG"
-            badge_color = "red" if is_fault else "green"
-
-            with mse_cols[k]:
-                st.metric(
-                    label=f"Cảm biến S{k+1}",
-                    value=f"{res.mse_channels[k]:.5f}",
-                    delta=f"{status_text} (τ = 0.0075)",
-                    delta_color="inverse" if is_fault else "normal",
-                    border=True
-                )
-
-        # Tính toán sai số MAE trước và sau bù
-        mae_raw_val = float(np.mean(np.abs(clean_trace - corrupt_trace)))
-        mae_imp_val = float(np.mean(np.abs(clean_trace - imputed_trace)))
-        mae_improve = ((mae_raw_val - mae_imp_val) / mae_raw_val * 100) if mae_raw_val > 1e-6 else 0.0
-
-        st.caption(f"Sai số MAE trước phục hồi: **{mae_raw_val:.4f}** • Sau phục hồi: **{mae_imp_val:.4f}** • Mức giảm sai số: **{mae_improve:.1f}%**")
+        st.subheader("Kiểm tra nhất quán không gian cụm 3 cảm biến", icon=":material/hub:")
+        st.caption("Đối chiếu 3 kênh cảm biến đồng thời trên cùng cửa sổ 32 mẫu:")
+        fig_spatial = plot_spatial_consistency(
+            sensor_readings=X_corrupt[window_idx],
+            tolerance_delta=0.05,
+            height=280
+        )
+        st.plotly_chart(fig_spatial, width="stretch")
 
 with col_calc:
     with st.container(border=True):
-        st.subheader("Nguyên lý phục hồi Selective Spatial Imputation", icon=":material/calculate:")
+        st.subheader("Nguyên lý Selective Spatial Imputation", icon=":material/calculate:")
         st.markdown("""
         **1. Trường hợp 0 cảm biến lỗi:**  
         $$\\hat{x}_{t} = x_{t} \\quad (\\text{Bảo toàn nguyên vẹn chuỗi đo ban đầu})$$
 
-        **2. Trường hợp 1 cảm biến lỗi (Ví dụ S1 bị hỏng, S2 và S3 lành lặn):**  
+        **2. Trường hợp 1 cảm biến lỗi (VD: S1 lỗi, S2 và S3 lành):**  
         $$\\hat{x}_{t, S1} = \\frac{x_{t, S2} + x_{t, S3}}{2}$$  
-        *Chỉ bù đúng kênh lỗi, tuyệt đối không can thiệp làm méo dạng sóng của 2 kênh lành lặn.*
+        *Chỉ bù đúng kênh lỗi, bảo toàn dạng sóng các kênh lành lặn.*
 
         **3. Trường hợp $\\ge 2$ cảm biến cùng hỏng:**  
         $$\\hat{x}_{t} = \\text{median}(S_1, S_2, S_3) \\quad \\& \\quad \\text{Khóa Relay ngắt bơm Fail-safe}$$
