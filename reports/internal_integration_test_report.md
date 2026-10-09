@@ -12,9 +12,9 @@
 | Tiêu chí kiểm định | Kết quả đo đạc | Chuẩn chấp nhận (SLA) | Đánh giá |
 | :--- | :---: | :---: | :---: |
 | **Kích thước tập dữ liệu mẫu** | `(126, 32, 3)` | $126 \times 32 \times 3$ | ĐẠT |
-| **Thời gian nạp lần 1 (Cold Load)** | **29.04 ms** | $< 500\text{ ms}$ | **XUẤT SẮC** |
-| **Thời gian nạp đệm (Warm Cached Load)** | **1.0711 ms** | $< 50\text{ ms}$ | **XUẤT SẮC** |
-| **Bộ nhớ RAM đỉnh (Peak Heap Usage)** | **522.69 KB** | $< 50\text{ MB}$ | **TIẾT KIỆM** |
+| **Thời gian nạp lần 1 (Cold Load)** | **19.13 ms** | $< 500\text{ ms}$ | **XUẤT SẮC** |
+| **Thời gian nạp đệm (Warm Cached Load)** | **0.7741 ms** | $< 50\text{ ms}$ | **XUẤT SẮC** |
+| **Bộ nhớ RAM đỉnh (Peak Heap Usage)** | **523.28 KB** | $< 50\text{ MB}$ | **TIẾT KIỆM** |
 
 > **Nhận xét:** Cơ chế `@st.cache_data` hoạt động tối ưu. Sau lần nạp đầu tiên, thời gian truy xuất dữ liệu chỉ tốn chưa tới $1\text{ ms}$, hoàn toàn loại bỏ tình trạng đơ lag khi người dùng thao tác chuyển trang trên Dashboard.
 
@@ -24,9 +24,9 @@
 
 | Chỉ số vận hành | Kết quả | Mục tiêu thiết kế |
 | :--- | :---: | :---: |
-| **Thời gian xử lý trung bình (Avg Latency)** | **0.266 ms / cửa sổ** | $< 10\text{ ms}$ |
-| **Độ trễ phân vị thứ 95 (P95 Latency)** | **0.331 ms** | $< 15\text{ ms}$ |
-| **Độ trễ cực đại (Max Spike)** | **1.833 ms** | Không gián đoạn |
+| **Thời gian xử lý trung bình (Avg Latency)** | **0.276 ms / cửa sổ** | $< 10\text{ ms}$ |
+| **Độ trễ phân vị thứ 95 (P95 Latency)** | **0.373 ms** | $< 15\text{ ms}$ |
+| **Độ trễ cực đại (Max Spike)** | **0.683 ms** | Không gián đoạn |
 | **Sai số phục hồi trung bình (Avg Imputed MAE)** | **0.0019** | $< 0.030$ |
 
 ### Phân bố trạng thái phân loại trên 126 cửa sổ:

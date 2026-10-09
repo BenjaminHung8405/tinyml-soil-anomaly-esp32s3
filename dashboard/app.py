@@ -1,14 +1,11 @@
 """
 Trang chủ: dashboard/app.py
-Nhiệm vụ: Cung cấp bức tranh toàn cảnh Executive Summary, bảng chỉ số tóm tắt,
-các thẻ điều hướng sang 3 chuyên đề chuyên sâu và bảng đối chuẩn nhanh.
+Nhiệm vụ: Executive Summary tinh gọn theo nguyên tắc 3 Giây - 3 Phút - 30 Phút.
 """
 
 import sys
 import os
-import time
 import streamlit as st
-import pandas as pd
 
 # Đảm bảo đường dẫn import
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,194 +15,57 @@ for p in [PROJECT_ROOT, CURRENT_DIR]:
         sys.path.insert(0, p)
 
 from components.sidebar import render_sidebar
-from components.data_loader import (
-    load_sample_windows,
-    load_benchmark_metrics,
-    load_hardware_benchmarks,
-)
 
-# Cấu hình trang chung
 st.set_page_config(
-    page_title="Ag-IoT Soil Anomaly Pipeline | TinyML ESP32-S3",
-    page_icon=":material/analytics:",
+    page_title="Ag-IoT Soil Anomaly Dashboard",
+    page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Hiển thị Sidebar chung
 render_sidebar()
 
-# -----------------------------------------------------------------------------
-# TIÊU ĐỀ CHÍNH & PHÂN CẤP THỊ GIÁC (EXECUTIVE SUMMARY)
-# -----------------------------------------------------------------------------
-st.caption("TRẠM QUAN TRẮC ĐỘ ẨM ĐẤT AG-IOT / HỆ THỐNG NHÚNG TINYML TRÊN ESP32-S3")
-st.title("Phát hiện bất thường và phục hồi chuỗi thời gian độ ẩm đất", icon=":material/sensors:")
+# Hero Section
+st.title("🌱 Ag-IoT Soil Anomaly Detection & Adaptive Imputation")
 st.markdown(
-    "Hệ thống nhúng TinyML tự động phát hiện dị thường và phục hồi chuỗi thời gian "
-    "độ ẩm đất bằng giải pháp **Software-defined reliability** đa tầng trên vi điều khiển ESP32-S3."
+    "**Giám sát độ ẩm đất thời gian thực với độ tin cậy định nghĩa bằng phần mềm "
+    "(Software-defined Reliability) trên vi điều khiển ESP32-S3.**"
 )
+st.markdown("---")
 
-st.space("small")
+# 3 Chỉ số Hero Cốt lõi (Bỏ các thông số debug thứ yếu)
+col1, col2, col3 = st.columns(3)
+col1.metric("F1-Score Phát hiện Dị thường", "0.912", "+17.0% so với 3-Sigma")
+col2.metric("Thời gian Suy luận Trên Chip", "18.4 ms", "ESP32-S3 (Real-time)")
+col3.metric("Mức giảm Sai số MAE", "80.9%", "Mục tiêu đề cương: ≥ 40%")
 
-# -----------------------------------------------------------------------------
-# DỮ LIỆU NỀN TẢNG (CACHED)
-# -----------------------------------------------------------------------------
-t_start = time.perf_counter()
-X_clean, X_corrupt, labels = load_sample_windows(126)
-metrics_df = load_benchmark_metrics()
-hardware_df = load_hardware_benchmarks()
-load_time_ms = (time.perf_counter() - t_start) * 1000
+st.markdown("---")
+st.subheader("🧭 Khám phá Các Chuyên đề Nghiên cứu")
 
-# -----------------------------------------------------------------------------
-# 4 METRIC CARDS TÓM LƯỢC (KPI SUMMARY)
-# -----------------------------------------------------------------------------
-f1_sparkline = [0.42, 0.55, 0.68, 0.74, 0.81, 0.88, 0.912]
-latency_sparkline = [18.4, 12.0, 5.2, 1.8, 0.65, 0.32, 0.192]
-sram_sparkline = [32.0, 28.0, 14.5, 6.2, 3.1, 2.4, 1.94]
-mae_sparkline = [0.084, 0.071, 0.052, 0.038, 0.024, 0.019, 0.016]
+# 4 Thẻ chuyên đề tinh gọn dạng 2x2
+col_a, col_b = st.columns(2)
 
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.metric(
-        label="F1-Score mô hình đề xuất",
-        value="0.912",
-        delta="+17.0% vs Moving 3-Sigma",
-        border=True,
-        chart_data=f1_sparkline,
-        chart_type="line",
-    )
-
-with col2:
-    st.metric(
-        label="Độ trễ suy luận trên chip",
-        value="0.192 ms",
-        delta=f"Cache: {load_time_ms:.1f} ms (< 500ms)",
-        delta_color="normal",
-        border=True,
-        chart_data=latency_sparkline,
-        chart_type="line",
-    )
-
-with col3:
-    st.metric(
-        label="SRAM Arena chiếm dụng",
-        value="1.94 KB",
-        delta="Dư 233.8 KB Free Heap",
-        delta_color="off",
-        border=True,
-        chart_data=sram_sparkline,
-        chart_type="bar",
-    )
-
-with col4:
-    st.metric(
-        label="Tỷ lệ giảm sai số MAE",
-        value="80.9%",
-        delta="Chỉ tiêu đề cương: ≥ 40%",
-        delta_color="normal",
-        border=True,
-        chart_data=mae_sparkline,
-        chart_type="line",
-    )
-
-st.space("small")
-
-# -----------------------------------------------------------------------------
-# ĐỊNH HƯỚNG CÁC CHUYÊN ĐỀ NGHIÊN CỨU (NAVIGATION HUBS)
-# -----------------------------------------------------------------------------
-st.subheader("Định hướng các chuyên đề nghiên cứu trong hệ thống", icon=":material/explore:")
-
-col_nav1, col_nav2, col_nav3, col_nav4 = st.columns(4)
-
-with col_nav1:
+with col_a:
     with st.container(border=True):
-        st.markdown("#### 1. Kiến trúc hệ thống & BOM")
-        st.caption("Kiến trúc nhúng & Phần cứng")
-        st.markdown(
-            "Khám phá **Pipeline 7 tầng**, phân rã FreeRTOS, "
-            "dưỡng cắm tam giác $r=5\\text{ cm}$ và tối ưu chi phí BOM."
-        )
-        st.page_link(
-            "pages/1_System_Architecture.py",
-            label="Kiến trúc hệ thống",
-            icon=":material/architecture:",
-            width="stretch"
-        )
+        st.markdown("#### 🏗️ 1. Kiến trúc Hệ thống & Phần cứng")
+        st.write("Tìm hiểu Pipeline 7 tầng, bố trí cụm 3 cảm biến đối xứng bán kính 5 cm và bài toán tối ưu chi phí BOM.")
+        st.page_link("pages/1_System_Architecture.py", label="Khám phá Kiến trúc →", icon="📐")
 
-with col_nav2:
     with st.container(border=True):
-        st.markdown("#### 2. Trực quan hóa A/B")
-        st.caption("Thực nghiệm tương tác")
-        st.markdown(
-            "Tiêm lỗi trên **126 cửa sổ mẫu**, theo dõi bóc tách $MSE_k$, "
-            "điểm $C_t$ và **Selective Imputation**."
-        )
-        st.page_link(
-            "pages/2_Algorithm_Explorer.py",
-            label="Bộ kiểm thử A/B",
-            icon=":material/tune:",
-            width="stretch"
-        )
+        st.markdown("#### 📊 3. Bảng Đối chuẩn Khoa học")
+        st.write("So sánh định lượng toàn diện giữa phương pháp đề xuất với Ngưỡng tĩnh, Hampel và Moving 3-Sigma.")
+        st.page_link("pages/3_Benchmark_Comparison.py", label="Xem Bảng Đối chuẩn Toàn diện →", icon="📈")
 
-with col_nav3:
+with col_b:
     with st.container(border=True):
-        st.markdown("#### 3. Bảng đối chuẩn")
-        st.caption("Định lượng học thuật")
-        st.markdown(
-            "So sánh định lượng với **Ngưỡng tĩnh**, "
-            "**Hampel** và **Moving 3-Sigma** về F1, FAR, MDR và Radar."
-        )
-        st.page_link(
-            "pages/3_Benchmark_Comparison.py",
-            label="Bảng đối chuẩn",
-            icon=":material/analytics:",
-            width="stretch"
-        )
+        st.markdown("#### 🔬 2. Trực quan hóa Thuật toán A/B")
+        st.write("Trực tiếp kiểm thử 18 kịch bản tiêm lỗi, theo dõi bóc tách sai số từng kênh và phục hồi Selective Imputation.")
+        st.page_link("pages/2_Algorithm_Explorer.py", label="Trải nghiệm Kịch bản Thực nghiệm →", icon="🧪")
 
-with col_nav4:
     with st.container(border=True):
-        st.markdown("#### 4. Chẩn đoán kỹ thuật")
-        st.caption("Nghiệm thu Task T1.1.5")
-        st.markdown(
-            "Thực hiện **Stress Test trực tiếp**, đo đạc độ trễ tức thời, "
-            "phân vị P95 và kiểm tra độ ổn định."
-        )
-        st.page_link(
-            "pages/4_System_Diagnostic.py",
-            label="Chẩn đoán kỹ thuật",
-            icon=":material/bolt:",
-            width="stretch"
-        )
+        st.markdown("#### ⚡ 4. Chẩn đoán Kỹ thuật & Tải dữ liệu")
+        st.write("Đo kiểm hiệu năng nạp dữ liệu tức thì, stress-test 126 cửa sổ và kiểm tra độ ổn định thời gian thực.")
+        st.page_link("pages/4_System_Diagnostic.py", label="Chạy Kiểm định Hệ thống →", icon="🚀")
 
-st.space("small")
-
-# -----------------------------------------------------------------------------
-# BẢNG TÓM TẮT NHANH HIỆU NĂNG ĐỐI CHUẨN (PREVIEW DATAFRAME)
-# -----------------------------------------------------------------------------
-with st.container(border=True):
-    st.subheader("Tóm tắt nhanh hiệu năng đối chuẩn (Benchmark Preview)", icon=":material/table_chart:")
-    st.caption("Ma trận tóm tắt kết quả nghiệm thu so sánh 4 giải pháp trên 126 cửa sổ kiểm thử:")
-
-    st.dataframe(
-        metrics_df,
-        column_config={
-            "Phương pháp": st.column_config.TextColumn("Phương pháp đánh giá", width="large"),
-            "F1-Score": st.column_config.ProgressColumn("F1-Score", min_value=0.0, max_value=1.0, format="%.3f"),
-            "Precision": st.column_config.NumberColumn("Precision", format="%.3f"),
-            "Recall": st.column_config.NumberColumn("Recall", format="%.3f"),
-            "FAR (%)": st.column_config.NumberColumn("FAR (%)", format="%.1f%%"),
-            "MDR (%)": st.column_config.NumberColumn("MDR (%)", format="%.1f%%"),
-            "MAE Giảm (%)": st.column_config.ProgressColumn("Giảm MAE (%)", min_value=0.0, max_value=100.0, format="%.1f%%"),
-            "Độ trễ Trên Chip": st.column_config.TextColumn("Độ trễ (ESP32-S3)"),
-            "SRAM Arena": st.column_config.TextColumn("Bộ nhớ SRAM"),
-        },
-        hide_index=True,
-        width="stretch",
-    )
-
-# Chân trang
-st.space("small")
-with st.container(horizontal=True, horizontal_alignment="distribute"):
-    st.caption("Khóa luận tốt nghiệp: TinyML Soil Anomaly Pipeline trên ESP32-S3")
-    st.caption(f"Tốc độ nạp dữ liệu: {load_time_ms:.2f} ms • Khởi tạo từ bộ đệm cache")
+st.markdown("---")
+st.caption("💡 Khuyến nghị trình chiếu: Sử dụng **Trang 2 (Khám phá Thuật toán)** để demo trực tiếp khả năng phát hiện lỗi trước Hội đồng.")

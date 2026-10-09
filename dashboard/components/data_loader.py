@@ -87,6 +87,96 @@ def load_sample_windows(n_windows: int = 126, window_size: int = 32, n_channels:
 
 
 @st.cache_data(show_spinner=False)
+def load_sample_windows_with_metadata():
+    """
+    Nạp 126 cửa sổ mẫu kèm theo bảng Metadata chi tiết:
+    - 108 cửa sổ sạch (Clean)
+    - 18 cửa sổ lỗi phân bổ: Spike (5), Noise/Missing (5), Stuck-at (4), Drift (4)
+    Bao phủ 4 dạng bất thường ở 3 cấp độ (Nhẹ, Vừa, Nặng) trên 3 kênh cảm biến S1, S2, S3.
+    """
+    X_clean, X_corrupt, _ = load_sample_windows(126)
+    
+    # Thiết lập bảng Metadata cho 126 cửa sổ
+    metadata_records = []
+    
+    # 1. 108 cửa sổ đầu: Sạch (Index 0 -> 107)
+    for idx in range(108):
+        metadata_records.append({
+            "window_idx": idx,
+            "status": "Sạch (Normal)",
+            "fault_type": "None",
+            "severity": "Không",
+            "target_channel": "None",
+            "description": f"Chuỗi VWC tự nhiên #{idx+1}"
+        })
+        # Đảm bảo dữ liệu corrupt trùng khớp dữ liệu clean cho 108 cửa sổ đầu
+        X_corrupt[idx] = X_clean[idx].copy()
+
+    # 2. 18 cửa sổ sau: Tiêm lỗi có kiểm soát (Index 108 -> 125)
+    # Định nghĩa ma trận lỗi cho 18 kịch bản
+    fault_scenarios = [
+        # Spike (5 ca)
+        (108, "Spike", "Nhẹ (+0.15)", 0, "Xung gai nhỏ Kênh S1"),
+        (109, "Spike", "Vừa (+0.30)", 0, "Xung gai vừa Kênh S1"),
+        (110, "Spike", "Nặng (+0.45)", 1, "Sụt áp / Nhiễu tia lửa điện S2"),
+        (111, "Spike", "Vừa (+0.30)", 2, "Xung điện từ trên S3"),
+        (112, "Spike", "Nặng (+0.50)", 0, "Xung cực đại trên S1"),
+        # Noise / Missing (5 ca)
+        (113, "Noise", "Nhẹ (σ=0.03)", 1, "Nhiễu tiếp xúc nhẹ S2"),
+        (114, "Noise", "Vừa (σ=0.06)", 2, "Nhiễu trắng cao tần S3"),
+        (115, "Noise", "Nặng (σ=0.10)", 0, "Đứt cáp / Rung lắc mạnh S1"),
+        (116, "Missing", "Nặng (0.00)", 1, "Mất nguồn cảm biến S2 (Missing)"),
+        (117, "Missing", "Nặng (1.00)", 2, "Chập mạch nguồn VCC trên S3"),
+        # Stuck-at (4 ca)
+        (118, "Stuck-at", "Nhẹ (0.32)", 0, "Kẹt ADC mức 0.32 trên S1"),
+        (119, "Stuck-at", "Vừa (0.40)", 1, "Kẹt ADC mức 0.40 trên S2"),
+        (120, "Stuck-at", "Nặng (0.05)", 2, "Kẹt sát đáy trên S3"),
+        (121, "Stuck-at", "Nặng (0.85)", 0, "Kẹt đỉnh bão hòa trên S1"),
+        # Drift (4 ca)
+        (122, "Drift", "Nhẹ (+0.10)", 0, "Trôi dốc ăn mòn nhẹ S1"),
+        (123, "Drift", "Vừa (+0.20)", 1, "Trôi dốc phân cực S2"),
+        (124, "Drift", "Nặng (+0.35)", 2, "Trôi dốc lão hóa mạnh S3"),
+        (125, "Drift", "Nặng (-0.25)", 0, "Trôi suy hao điện áp S1")
+    ]
+
+    np.random.seed(42)
+    for win_id, f_type, sev, ch, desc in fault_scenarios:
+        # Làm sạch trước khi tiêm
+        X_corrupt[win_id] = X_clean[win_id].copy()
+        
+        # Tiêm tín hiệu lỗi tương ứng
+        if f_type == "Spike":
+            amp = 0.15 if "Nhẹ" in sev else (0.30 if "Vừa" in sev else (0.50 if "0.50" in sev else 0.45))
+            X_corrupt[win_id, 16, ch] += amp
+        elif f_type == "Noise":
+            sigma = 0.03 if "Nhẹ" in sev else (0.06 if "Vừa" in sev else 0.10)
+            X_corrupt[win_id, :, ch] += np.random.normal(0, sigma, 32)
+        elif f_type == "Missing":
+            val = 0.0 if "0.00" in sev else 0.95
+            X_corrupt[win_id, 10:25, ch] = val
+        elif f_type == "Stuck-at":
+            stuck_val = 0.05 if "0.05" in sev else (0.85 if "0.85" in sev else (0.40 if "0.40" in sev else 0.32))
+            X_corrupt[win_id, 8:, ch] = stuck_val
+        elif f_type == "Drift":
+            slope = 0.10 if "Nhẹ" in sev else (0.20 if "Vừa" in sev else 0.35)
+            if "-0.25" in sev:
+                slope = -0.25
+            X_corrupt[win_id, :, ch] += np.linspace(0, slope, 32)
+
+        metadata_records.append({
+            "window_idx": win_id,
+            "status": "Tiêm Lỗi (Faulty)",
+            "fault_type": f_type,
+            "severity": sev,
+            "target_channel": f"S{ch+1}",
+            "description": desc
+        })
+
+    df_meta = pd.DataFrame(metadata_records)
+    return X_clean, X_corrupt, df_meta
+
+
+@st.cache_data(show_spinner=False)
 def load_imputed_windows(n_windows: int = 126):
     """
     Sinh/Nạp chuỗi tín hiệu sau khi phục hồi bằng TinyML Autoencoder & bộ lọc thích ứng.

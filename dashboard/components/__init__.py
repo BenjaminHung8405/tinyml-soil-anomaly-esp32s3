@@ -10,7 +10,8 @@ from .plot_helpers import (
     plot_spatial_consistency,
 )
 from .sidebar import render_sidebar
-from .data_loader import load_sample_windows
+from .data_loader import load_sample_windows, load_sample_windows_with_metadata
+from .scenario_selector import render_scenario_selector
 
 __all__ = [
     "plot_triplet_signals",
@@ -19,4 +20,7 @@ __all__ = [
     "plot_spatial_consistency",
     "render_sidebar",
     "load_sample_windows",
+    "load_sample_windows_with_metadata",
+    "render_scenario_selector",
 ]
+
